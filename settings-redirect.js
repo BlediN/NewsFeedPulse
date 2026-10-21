@@ -1,1 +1,1 @@
-document.location="https://feeder.co/library/feeds/?ctx=extension";
+document.location=chrome.runtime.getURL("local-settings.html");
