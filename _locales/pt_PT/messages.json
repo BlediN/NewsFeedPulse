@@ -1,0 +1,86 @@
+{
+   "close": {
+      "message": "Fechar"
+   },
+   "learnMore": {
+      "message": "Saiba mais"
+   },
+   "manageSettings": {
+      "message": "Gerenciar configurações"
+   },
+   "postFrequencyAnumDay": {
+      "message": "Atualizado diariamente"
+   },
+   "postFrequencyAnumMonth": {
+      "message": "Atualizado mensalmente"
+   },
+   "postFrequencyAnumRarely": {
+      "message": "Atualizações raras"
+   },
+   "postFrequencyAnumWeek": {
+      "message": "Atualizado semanalmente"
+   },
+   "postFrequencyZero": {
+      "message": "Sem posts"
+   },
+   "settings": {
+      "message": "Configurações"
+   },
+   "subscribeEmailDone": {
+      "message": "Tudo pronto!"
+   },
+   "subscribeEmailError": {
+      "message": "Algo deu errado ao se inscrever nas atualizações por e-mail, tente novamente mais tarde."
+   },
+   "subscribeEmailHeader": {
+      "message": "Receba atualizações na sua caixa de entrada"
+   },
+   "subscribeEmailInput": {
+      "message": "Digite seu e-mail..."
+   },
+   "subscribeEmailNeedsVerification": {
+      "message": "Verifique sua caixa de entrada! Enviamos um e-mail com um link para verificar sua inscrição."
+   },
+   "subscribeEmailSubscribe": {
+      "message": "Inscrever-se"
+   },
+   "subscribeEmptyText": {
+      "message": "Isso significa que o feed não tem nenhum post. Isso pode acontecer por muitos motivos diferentes."
+   },
+   "subscribeEmptyTitle": {
+      "message": "Este feed está vazio"
+   },
+   "subscribeNewReaderName": {
+      "message": "Nome do novo leitor:"
+   },
+   "subscribeNewReaderUrl": {
+      "message": "Modelo de URL: (use %s como variável de URL)"
+   },
+   "subscribeNoFeedFound": {
+      "message": "Não encontramos nenhum feed aqui"
+   },
+   "subscribeSubscribeAddNew": {
+      "message": "Adicionar novo..."
+   },
+   "subscribeSubscribeLabel": {
+      "message": "Seguir este feed com"
+   },
+   "subscribeSubscribeNow": {
+      "message": "Seguir"
+   },
+   "subscribeSubscribeSuccess": {
+      "message": "Ótimo! Você se inscreveu com $READER$",
+      "placeholders": {
+         "READER": {
+            "content": "$1",
+            "example": "Feeder"
+         }
+      }
+   },
+   "subscribeWhatIsText": {
+      "message": "Isto é um feed RSS. Você pode adicioná-lo a um leitor de feeds."
+   },
+   "subscribeWhatIsTitle": {
+      "message": "O que é isto?"
+   }
+}

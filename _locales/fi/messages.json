@@ -1,0 +1,98 @@
+{
+   "close": {
+      "message": "Sulje"
+   },
+   "learnMore": {
+      "message": "Lue lisää"
+   },
+   "manageSettings": {
+      "message": "Hallitse asetuksia"
+   },
+   "postFrequencyAnumDay": {
+      "message": "Päivittyy päivittäin"
+   },
+   "postFrequencyAnumMonth": {
+      "message": "Päivittyy kuukausittain"
+   },
+   "postFrequencyAnumRarely": {
+      "message": "Päivittyy harvoin"
+   },
+   "postFrequencyAnumWeek": {
+      "message": "Päivittyy viikoittain"
+   },
+   "postFrequencyMultiple": {
+      "message": "$NUMBER$ julkaisua",
+      "placeholders": {
+         "NUMBER": {
+            "content": "$1",
+            "example": "3"
+         }
+      }
+   },
+   "postFrequencyOne": {
+      "message": "1 julkaisu"
+   },
+   "postFrequencyZero": {
+      "message": "Ei viestejä"
+   },
+   "settings": {
+      "message": "Asetukset"
+   },
+   "subscribeEmailDone": {
+      "message": "Valmista tuli!"
+   },
+   "subscribeEmailError": {
+      "message": "Jokin meni pieleen sähköpostipäivitysten tilauksessa, yritä myöhemmin uudelleen."
+   },
+   "subscribeEmailHeader": {
+      "message": "Saa päivitykset suoraan sähköpostiisi"
+   },
+   "subscribeEmailInput": {
+      "message": "Syötä sähköpostiosoitteesi..."
+   },
+   "subscribeEmailNeedsVerification": {
+      "message": "Tarkista sähköpostisi! Lähetimme sinulle viestin, jossa on linkki tilauksen vahvistamiseen."
+   },
+   "subscribeEmailSubscribe": {
+      "message": "Tilaa"
+   },
+   "subscribeEmptyText": {
+      "message": "Se tarkoittaa, että syötteessä ei ole yhtään julkaisua. Tähän voi olla monia eri syitä."
+   },
+   "subscribeEmptyTitle": {
+      "message": "Tämä syöte on tyhjä"
+   },
+   "subscribeNewReaderName": {
+      "message": "Uuden lukijan nimi:"
+   },
+   "subscribeNewReaderUrl": {
+      "message": "URL-malli: (käytä %s URL-muuttujana)"
+   },
+   "subscribeNoFeedFound": {
+      "message": "Emme löytäneet täältä syötettä"
+   },
+   "subscribeSubscribeAddNew": {
+      "message": "Lisää uusi..."
+   },
+   "subscribeSubscribeLabel": {
+      "message": "Seuraa tätä syötettä sovelluksella"
+   },
+   "subscribeSubscribeNow": {
+      "message": "Seuraa"
+   },
+   "subscribeSubscribeSuccess": {
+      "message": "Hienoa! Tilasit syötteen sovelluksella $READER$",
+      "placeholders": {
+         "READER": {
+            "content": "$1",
+            "example": "Feeder"
+         }
+      }
+   },
+   "subscribeWhatIsText": {
+      "message": "Tämä on RSS-syöte. Voit lisätä sen syötteenlukijaan."
+   },
+   "subscribeWhatIsTitle": {
+      "message": "Mikä tämä on?"
+   }
+}

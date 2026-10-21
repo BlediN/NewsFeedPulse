@@ -1,0 +1,1 @@
+if(self!=top){function listenForMessage(e,n){chrome.runtime.onMessage.addListener((function(t,s,o){t.type===e&&n(t.data)}))}function sendMessage(e){chrome.runtime.sendMessage(e)}sendMessage({type:"executeOnReader"}),listenForMessage("executeOnReader:true",(function(e){setTimeout((function(){document.documentElement.style.display="block"}),100)}))}

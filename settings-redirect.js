@@ -1,0 +1,1 @@
+document.location="https://feeder.co/library/feeds/?ctx=extension";

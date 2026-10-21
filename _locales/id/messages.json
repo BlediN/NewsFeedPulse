@@ -1,0 +1,98 @@
+{
+   "close": {
+      "message": "Tutup"
+   },
+   "learnMore": {
+      "message": "Pelajari lebih lanjut"
+   },
+   "manageSettings": {
+      "message": "Kelola pengaturan"
+   },
+   "postFrequencyAnumDay": {
+      "message": "Diperbarui setiap hari"
+   },
+   "postFrequencyAnumMonth": {
+      "message": "Diperbarui setiap bulan"
+   },
+   "postFrequencyAnumRarely": {
+      "message": "Jarang diperbarui"
+   },
+   "postFrequencyAnumWeek": {
+      "message": "Diperbarui setiap minggu"
+   },
+   "postFrequencyMultiple": {
+      "message": "$NUMBER$ postingan",
+      "placeholders": {
+         "NUMBER": {
+            "content": "$1",
+            "example": "3"
+         }
+      }
+   },
+   "postFrequencyOne": {
+      "message": "1 postingan"
+   },
+   "postFrequencyZero": {
+      "message": "Tidak ada postingan"
+   },
+   "settings": {
+      "message": "Pengaturan"
+   },
+   "subscribeEmailDone": {
+      "message": "Semua siap!"
+   },
+   "subscribeEmailError": {
+      "message": "Terjadi kesalahan saat berlangganan pembaruan email, silakan coba lagi nanti."
+   },
+   "subscribeEmailHeader": {
+      "message": "Dapatkan pembaruan di kotak masuk Anda"
+   },
+   "subscribeEmailInput": {
+      "message": "Masukkan email Anda..."
+   },
+   "subscribeEmailNeedsVerification": {
+      "message": "Periksa kotak masuk Anda! Kami telah mengirim email berisi tautan untuk memverifikasi langganan Anda."
+   },
+   "subscribeEmailSubscribe": {
+      "message": "Langganan"
+   },
+   "subscribeEmptyText": {
+      "message": "Artinya feed ini tidak memiliki postingan apa pun. Ini bisa terjadi karena berbagai alasan."
+   },
+   "subscribeEmptyTitle": {
+      "message": "Feed ini kosong"
+   },
+   "subscribeNewReaderName": {
+      "message": "Nama pembaca baru:"
+   },
+   "subscribeNewReaderUrl": {
+      "message": "Templat URL: (gunakan %s sebagai variabel URL)"
+   },
+   "subscribeNoFeedFound": {
+      "message": "Kami tidak menemukan feed di sini"
+   },
+   "subscribeSubscribeAddNew": {
+      "message": "Tambah baru..."
+   },
+   "subscribeSubscribeLabel": {
+      "message": "Ikuti feed ini dengan"
+   },
+   "subscribeSubscribeNow": {
+      "message": "Ikuti"
+   },
+   "subscribeSubscribeSuccess": {
+      "message": "Bagus! Anda berlangganan dengan $READER$",
+      "placeholders": {
+         "READER": {
+            "content": "$1",
+            "example": "Feeder"
+         }
+      }
+   },
+   "subscribeWhatIsText": {
+      "message": "Ini adalah feed RSS. Anda dapat menambahkannya ke pembaca feed."
+   },
+   "subscribeWhatIsTitle": {
+      "message": "Apa ini?"
+   }
+}
