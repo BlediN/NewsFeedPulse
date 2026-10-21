@@ -13,7 +13,9 @@ input[type="text"], select { box-sizing: border-box; min-height: 40px; border: 1
 input[type="text"] { flex: 1; min-width: 0; }
 button { min-height: 40px; border: 0; border-radius: 8px; padding: 8px 16px; background: #5949c6; color: #fff; font-weight: 650; cursor: pointer; }
 button:hover { background: #4637ae; } button.secondary { background: #eceafb; color: #392c98; }
+button:disabled { cursor: default; opacity: .58; }
 .check { display: flex; align-items: center; gap: 9px; font-weight: 500; }
+.hint { margin: -1px 0 16px 25px; font-size: 13px; }
 .fields { display: grid; grid-template-columns: 150px minmax(180px, 1fr); align-items: center; gap: 6px 12px; max-width: 480px; }
 .fields label { margin: 0; }
 .actions { display: flex; align-items: center; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
@@ -22,13 +24,21 @@ output { display: block; min-height: 20px; margin-top: 10px; color: #2f6c3a; }
 output.error { color: #a52b2b; }
 .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .section-heading h2, .section-heading p { margin-bottom: 4px; }
+.section-controls, .feed-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .feed-results, .saved-feeds { margin-top: 10px; }
 .feed-result, .saved-feed { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid #e6e8ef; }
 .feed-result strong, .feed-result span, .saved-feed strong, .saved-feed span, .saved-feed small { display: block; }
 .feed-result span, .saved-feed span { overflow: hidden; color: #656b7c; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.feed-toast-control { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.feed-toast-control input { accent-color: #5949c6; }
 .error-text { margin-top: 3px; color: #a52b2b; }
 button.danger { color: #a52b2b; }
-@media (max-width: 560px) { .row { flex-direction: column; } .fields { grid-template-columns: 1fr; } }
+@media (max-width: 560px) {
+  .row { flex-direction: column; }
+  .fields { grid-template-columns: 1fr; }
+  .section-heading { align-items: flex-start; flex-direction: column; }
+  .saved-feed { grid-template-columns: 1fr; }
+}
 @media (prefers-color-scheme: dark) {
   body { background: #15161c; color: #f2f3f7; } section { background: #202229; border-color: #343741; }
   header p, p { color: #b1b5c1; } input[type="text"], select { background: #17181e; color: #f2f3f7; border-color: #494d59; }

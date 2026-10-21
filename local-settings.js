@@ -11,7 +11,7 @@ try {
 const defaults = {
   localToastEnabled: true,
   localToastPosition: "top-right",
-  localToastDuration: 300000,
+  localToastDuration: 3000,
   pollIntervalMinutes: 5,
   maxPostsPerFeed: 50
 };
@@ -24,6 +24,11 @@ const settingsStatus = document.getElementById("settings-status");
 const feedStatus = document.getElementById("feed-status");
 const feedResults = document.getElementById("feed-results");
 const savedFeeds = document.getElementById("saved-feeds");
+const feedListStatus = document.getElementById("feed-list-status");
+const importFeedsButton = document.getElementById("import-feeds");
+const importFeedsFile = document.getElementById("import-feeds-file");
+const exportFeedsButton = document.getElementById("export-feeds");
+const MAX_IMPORT_BYTES = 1024 * 1024;
 let state = { feeds: [], posts: [], unreadCount: 0 };
 let currentCandidates = [];
 
@@ -64,6 +69,7 @@ async function saveSettings() {
 
 function renderSavedFeeds() {
   savedFeeds.replaceChildren();
+  exportFeedsButton.disabled = !state.feeds.length;
   if (!state.feeds.length) {
     const empty = document.createElement("p");
     empty.textContent = "No feeds have been added yet.";
@@ -85,17 +91,108 @@ function renderSavedFeeds() {
       error.textContent = feed.error;
       details.append(error);
     }
+    const actions = document.createElement("div");
+    actions.className = "feed-actions";
+    const toastLabel = document.createElement("label");
+    toastLabel.className = "feed-toast-control";
+    const toastToggle = document.createElement("input");
+    toastToggle.type = "checkbox";
+    toastToggle.checked = feed.toastEnabled !== false;
+    toastToggle.setAttribute("aria-label", `Show toast notifications for ${feed.title}`);
+    const toastText = document.createElement("span");
+    toastText.textContent = "Toasts";
+    toastLabel.append(toastToggle, toastText);
+    toastToggle.addEventListener("change", async () => {
+      const enabled = toastToggle.checked;
+      toastToggle.disabled = true;
+      try {
+        state = await request("feeds:setToast", { feedId: feed.id, enabled });
+        renderSavedFeeds();
+        status(feedListStatus, `Toast notifications ${enabled ? "enabled" : "disabled"} for ${feed.title}.`);
+      } catch (error) {
+        toastToggle.checked = !enabled;
+        toastToggle.disabled = false;
+        status(feedListStatus, error.message || String(error), true);
+      }
+    });
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "danger secondary";
     remove.textContent = "Remove";
     remove.addEventListener("click", async () => {
       if (!confirm(`Remove “${feed.title}” and its saved posts?`)) return;
-      try { state = await request("feeds:remove", { feedId: feed.id }); renderSavedFeeds(); renderResults(currentCandidates); }
-      catch (error) { status(feedStatus, error.message, true); }
+      try {
+        state = await request("feeds:remove", { feedId: feed.id });
+        renderSavedFeeds();
+        renderResults(currentCandidates);
+        status(feedListStatus, `${feed.title} was removed.`);
+      } catch (error) { status(feedListStatus, error.message, true); }
     });
-    row.append(details, remove);
+    actions.append(toastLabel, remove);
+    row.append(details, actions);
     savedFeeds.append(row);
+  }
+}
+
+async function exportFeeds() {
+  exportFeedsButton.disabled = true;
+  try {
+    const documentData = await request("feeds:export");
+    const contents = `${JSON.stringify(documentData, null, 2)}\n`;
+    const blobUrl = URL.createObjectURL(new Blob([contents], { type: "application/json" }));
+    const download = document.createElement("a");
+    download.href = blobUrl;
+    download.download = `news-feed-pulse-feeds-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.append(download);
+    download.click();
+    download.remove();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 0);
+    status(feedListStatus, `${state.feeds.length} feed${state.feeds.length === 1 ? "" : "s"} exported locally.`);
+  } catch (error) {
+    status(feedListStatus, error.message || String(error), true);
+  } finally {
+    exportFeedsButton.disabled = !state.feeds.length;
+  }
+}
+
+function importSummary(result) {
+  const parts = [
+    `${Number(result.added) || 0} added`,
+    `${Number(result.existing) || 0} already subscribed`,
+    `${Number(result.failed) || 0} failed`
+  ];
+  const failures = Array.isArray(result.failures) ? result.failures.slice(0, 3) : [];
+  if (failures.length) {
+    const details = failures.map(failure => {
+      if (typeof failure === "string") return failure;
+      return [failure?.url, failure?.message].filter(Boolean).join(": ");
+    }).filter(Boolean);
+    if (details.length) parts.push(details.join("; "));
+  }
+  return `Import complete: ${parts.join(" · ")}.`;
+}
+
+async function importFeeds(file) {
+  if (!file) return;
+  if (file.size > MAX_IMPORT_BYTES) {
+    status(feedListStatus, "That file is larger than the 1 MiB import limit.", true);
+    return;
+  }
+  importFeedsButton.disabled = true;
+  status(feedListStatus, "Validating and importing feeds…");
+  try {
+    const parsed = JSON.parse(await file.text());
+    const result = await request("feeds:import", { document: parsed });
+    state = result.state;
+    renderSavedFeeds();
+    renderResults(currentCandidates);
+    status(feedListStatus, importSummary(result), Number(result.failed) > 0);
+  } catch (error) {
+    status(feedListStatus, error instanceof SyntaxError
+      ? "That file does not contain valid JSON."
+      : error.message || String(error), true);
+  } finally {
+    importFeedsButton.disabled = false;
   }
 }
 
@@ -142,7 +239,13 @@ document.getElementById("save-settings").addEventListener("click", async () => {
 });
 
 document.getElementById("test-toast").addEventListener("click", async () => {
-  try { await saveSettings(); await request("toast:test"); status(settingsStatus, "A test toast was sent to an open webpage tab."); }
+  try {
+    await saveSettings();
+    const result = await request("toast:test");
+    status(settingsStatus, result.delivered
+      ? "The test toast is visible on the active webpage."
+      : "The test toast is queued and will appear when an eligible webpage tab is ready.");
+  }
   catch (error) { status(settingsStatus, error.message || String(error), true); }
 });
 
@@ -169,9 +272,17 @@ document.getElementById("refresh-feeds").addEventListener("click", async event =
     const result = await request("feeds:refresh");
     state = result.state;
     renderSavedFeeds();
-    status(feedStatus, "Feeds refreshed.");
-  } catch (error) { status(feedStatus, error.message || String(error), true); }
+    status(feedListStatus, "Feeds refreshed.");
+  } catch (error) { status(feedListStatus, error.message || String(error), true); }
   finally { button.disabled = false; button.textContent = "Refresh all"; }
+});
+
+exportFeedsButton.addEventListener("click", exportFeeds);
+importFeedsButton.addEventListener("click", () => importFeedsFile.click());
+importFeedsFile.addEventListener("change", () => {
+  const file = importFeedsFile.files?.[0];
+  importFeedsFile.value = "";
+  importFeeds(file);
 });
 
 loadSettings().catch(error => status(settingsStatus, error.message || String(error), true));

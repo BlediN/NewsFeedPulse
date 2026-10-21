@@ -30,6 +30,7 @@
       <section>
         <h2>In-page notifications</h2>
         <label class="check"><input id="toast-enabled" type="checkbox"> Show a toast when a new item arrives</label>
+        <p class="hint">Use the controls under Subscribed feeds to turn notifications on or off for individual feeds. Toasts appear one at a time; the newest item from each updated feed is shown before up to two additional items from those feeds.</p>
         <div class="fields">
           <label for="toast-position">Screen corner</label>
           <select id="toast-position">
@@ -40,10 +41,10 @@
           </select>
           <label for="toast-duration">Visible for</label>
           <select id="toast-duration">
-            <option value="3000">3 seconds</option><option value="5000">5 seconds</option>
+            <option value="3000" selected>3 seconds (default)</option><option value="5000">5 seconds</option>
             <option value="8000">8 seconds</option>
             <option value="12000">12 seconds</option><option value="20000">20 seconds</option>
-            <option value="60000">1 minute</option><option value="300000" selected>5 minutes (default)</option>
+            <option value="60000">1 minute</option><option value="300000">5 minutes</option>
           </select>
           <label for="poll-interval">Check for news</label>
           <select id="poll-interval">
@@ -56,6 +57,7 @@
             <option value="150">150 posts</option><option value="300">300 posts</option>
           </select>
         </div>
+        <p class="hint">Automatic feed checks are spread across the selected interval, so subscriptions refresh in small groups instead of all at once.</p>
         <div class="actions">
           <button id="save-settings" type="button">Save settings</button>
           <button id="test-toast" class="secondary" type="button">Test toast</button>
@@ -65,7 +67,16 @@
       </section>
 
       <section>
-        <div class="section-heading"><div><h2>Subscribed feeds</h2><p>Feeds and posts are stored only in this browser profile.</p></div><button id="refresh-feeds" class="secondary" type="button">Refresh all</button></div>
+        <div class="section-heading">
+          <div><h2>Subscribed feeds</h2><p>Feeds and posts are stored only in this browser profile.</p></div>
+          <div class="section-controls">
+            <button id="import-feeds" class="secondary" type="button">Import</button>
+            <button id="export-feeds" class="secondary" type="button">Export</button>
+            <button id="refresh-feeds" class="secondary" type="button">Refresh all</button>
+          </div>
+        </div>
+        <input id="import-feeds-file" type="file" accept="application/json,.json" hidden>
+        <output id="feed-list-status" aria-live="polite"></output>
         <div id="saved-feeds" class="saved-feeds"></div>
       </section>
 

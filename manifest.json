@@ -23,7 +23,7 @@
    "options_page": "local-settings.html",
    "permissions": [ "storage", "unlimitedStorage", "alarms", "scripting" ],
    "short_name": "Feed Pulse",
-   "version": "9.2.0",
+   "version": "9.3.0",
    "web_accessible_resources": [ {
       "matches": [ "https://*/*", "http://*/*" ],
       "resources": [ "extension-icons/icon48x48.png" ]

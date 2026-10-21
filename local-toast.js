@@ -1,18 +1,46 @@
 (() => {
+  "use strict";
+
   const controllerKey = "__newsFeedPulseToastController";
   const previousController = globalThis[controllerKey];
-  if (previousController?.listener) {
-    try { chrome.runtime.onMessage.removeListener(previousController.listener); } catch (_error) {}
+  if (typeof previousController?.cleanup === "function") {
+    previousController.cleanup("defer");
+  } else {
+    if (previousController?.listener) {
+      try { chrome.runtime.onMessage.removeListener(previousController.listener); } catch (_error) {}
+    }
+    if (previousController?.host?.isConnected) previousController.host.remove();
   }
-  if (previousController?.host?.isConnected) previousController.host.remove();
   try { delete globalThis.__newsFeedPulseToastInstalled; } catch (_error) {}
 
-  const controller = { listener: null, host: null };
+  const controller = {
+    cleanup: null,
+    current: null,
+    focusListener: null,
+    host: null,
+    listener: null,
+    visibilityListener: null
+  };
   const hostId = "news-feed-pulse-toast-host";
   let toastHost = null;
-  let toastStack = null;
+  let toastSlot = null;
+  let current = null;
 
-  function ensureStack(position) {
+  function sendRuntimeMessage(type, data = {}) {
+    try {
+      return Promise.resolve(chrome.runtime.sendMessage({ type, data })).catch(() => undefined);
+    } catch (_error) {
+      return Promise.resolve(undefined);
+    }
+  }
+
+  function announceReady() {
+    if (typeof document !== "undefined" && document.visibilityState === "visible") {
+      sendRuntimeMessage("localToast:ready");
+    }
+  }
+
+  function ensureHost(position) {
     if (!toastHost || !toastHost.isConnected) {
       toastHost = document.createElement("div");
       toastHost.id = hostId;
@@ -24,7 +52,7 @@
           :host([data-position="top-left"]) { top: 14px; left: 14px; }
           :host([data-position="bottom-right"]) { bottom: 14px; right: 14px; }
           :host([data-position="bottom-left"]) { bottom: 14px; left: 14px; }
-          #stack { display: flex; flex-direction: column; gap: 10px; width: min(360px, calc(100vw - 28px)); }
+          #slot { width: min(360px, calc(100vw - 28px)); }
           .toast { box-sizing: border-box; display: grid; grid-template-columns: 42px 1fr 24px; gap: 10px;
             width: 100%; padding: 12px; border: 1px solid #465063; border-left: 4px solid #8b7cff; border-radius: 12px;
             background: #171a21; color: #f8fafc;
@@ -41,17 +69,43 @@
           @keyframes enter { from { opacity: 0; transform: translateY(-8px) scale(.98); } }
           @media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
         </style>
-        <div id="stack" role="region" aria-label="RSS feed notifications"></div>`;
-      toastStack = shadow.getElementById("stack");
+        <div id="slot" role="region" aria-label="RSS feed notification"></div>`;
+      toastSlot = shadow.getElementById("slot");
       document.documentElement.appendChild(toastHost);
       controller.host = toastHost;
     }
     toastHost.dataset.position = position || "top-right";
-    return toastStack;
+    return toastSlot;
+  }
+
+  function detachCurrent() {
+    if (!current) return null;
+    const detached = current;
+    current = null;
+    controller.current = null;
+    window.clearTimeout(detached.timer);
+    detached.toast.remove();
+    return detached;
+  }
+
+  function finishCurrent(type) {
+    const detached = detachCurrent();
+    if (!detached) return;
+    sendRuntimeMessage(type, { deliveryId: detached.deliveryId });
+  }
+
+  function openCurrent() {
+    const detached = detachCurrent();
+    if (!detached) return;
+    const open = sendRuntimeMessage("localToast:open", {
+      postId: detached.data.postId,
+      url: detached.data.link
+    });
+    open.finally(() => sendRuntimeMessage("localToast:complete", { deliveryId: detached.deliveryId }));
   }
 
   function showToast(data) {
-    const stack = ensureStack(data.position);
+    const slot = ensureHost(data.position);
     const toast = document.createElement("div");
     toast.className = "toast";
     toast.setAttribute("role", "status");
@@ -70,21 +124,69 @@
     close.type = "button";
     close.setAttribute("aria-label", "Dismiss notification");
     close.textContent = "×";
-    close.addEventListener("click", (event) => { event.stopPropagation(); toast.remove(); });
-    toast.append(icon, text, close);
-    toast.addEventListener("click", () => {
-      if (data.link) chrome.runtime.sendMessage({ type: "localToast:open", data: { postId: data.postId, url: data.link } }).catch(() => undefined);
-      toast.remove();
+    close.addEventListener("click", event => {
+      event.stopPropagation();
+      finishCurrent("localToast:complete");
     });
-    stack.prepend(toast);
-    while (stack.children.length > 4) stack.lastElementChild.remove();
-    const duration = Math.max(2000, Math.min(Number(data.duration) || 300000, 300000));
-    window.setTimeout(() => toast.remove(), duration);
+    toast.append(icon, text, close);
+    toast.addEventListener("click", openCurrent);
+    slot.replaceChildren(toast);
+
+    const numericDuration = Number(data.duration);
+    const duration = Math.max(2000, Math.min(Number.isFinite(numericDuration) ? numericDuration : 3000, 300000));
+    current = {
+      data,
+      deliveryId: data.deliveryId,
+      timer: window.setTimeout(() => finishCurrent("localToast:complete"), duration),
+      toast
+    };
+    controller.current = current;
   }
 
-  controller.listener = (message) => {
-    if (message && message.type === "localToast:show" && message.data) showToast(message.data);
+  controller.listener = (message, _sender, sendResponse) => {
+    const type = message?.type;
+    const data = message?.data || {};
+    if (type === "localToast:deliver") {
+      const deliveryId = typeof data.deliveryId === "string" ? data.deliveryId : "";
+      if (!deliveryId || document.visibilityState !== "visible" || (current && current.deliveryId !== deliveryId)) {
+        sendResponse({ accepted: false });
+        return false;
+      }
+      if (!current) showToast(data);
+      sendResponse({ accepted: true });
+      return false;
+    }
+    if (type === "localToast:cancel") {
+      const cancelled = Boolean(current && current.deliveryId === data.deliveryId);
+      if (cancelled) detachCurrent();
+      sendResponse({ cancelled });
+      return false;
+    }
+    return false;
   };
+
+  controller.visibilityListener = () => {
+    if (document.visibilityState === "hidden") finishCurrent("localToast:defer");
+    else announceReady();
+  };
+  controller.focusListener = announceReady;
+  controller.cleanup = signal => {
+    try { chrome.runtime.onMessage.removeListener(controller.listener); } catch (_error) {}
+    if (typeof document !== "undefined") {
+      document.removeEventListener("visibilitychange", controller.visibilityListener);
+    }
+    if (typeof window !== "undefined") window.removeEventListener("focus", controller.focusListener);
+    if (signal === "defer") finishCurrent("localToast:defer");
+    else detachCurrent();
+    if (toastHost?.isConnected) toastHost.remove();
+    controller.host = null;
+  };
+
   chrome.runtime.onMessage.addListener(controller.listener);
+  if (typeof document !== "undefined") {
+    document.addEventListener("visibilitychange", controller.visibilityListener);
+  }
+  if (typeof window !== "undefined") window.addEventListener("focus", controller.focusListener);
   globalThis[controllerKey] = controller;
+  announceReady();
 })();
