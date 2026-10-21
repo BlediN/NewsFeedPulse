@@ -142,7 +142,7 @@ document.getElementById("save-settings").addEventListener("click", async () => {
 });
 
 document.getElementById("test-toast").addEventListener("click", async () => {
-  try { await saveSettings(); await request("toast:test"); status(settingsStatus, "A test toast was sent to the active webpage."); }
+  try { await saveSettings(); await request("toast:test"); status(settingsStatus, "A test toast was sent to an open webpage tab."); }
   catch (error) { status(settingsStatus, error.message || String(error), true); }
 });
 

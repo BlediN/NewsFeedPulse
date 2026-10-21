@@ -487,9 +487,7 @@ async function refreshAll(notify = true) {
 async function showPostToast(post, feed) {
   const settings = await getSettings();
   if (!settings.localToastEnabled) return false;
-  const tab = await findToastTab();
-  if (!tab) return false;
-  return sendToastToTab(tab.id, {
+  return sendToastToAvailableTab({
     postId: post.id,
     title: post.title,
     message: feed?.title || "New RSS item",
@@ -500,10 +498,20 @@ async function showPostToast(post, feed) {
   });
 }
 
-async function findToastTab() {
+async function findToastTabs() {
   const tabs = await chrome.tabs.query({});
-  return tabs.filter(value => value.id && /^https?:/i.test(value.url || ""))
-    .sort((left, right) => Number(right.lastAccessed || 0) - Number(left.lastAccessed || 0) || Number(right.active) - Number(left.active))[0] || null;
+  return tabs.filter(value => value.id && !value.discarded && /^https?:/i.test(value.url || ""))
+    .sort((left, right) =>
+      Number(right.active) - Number(left.active)
+      || Number(right.lastAccessed || 0) - Number(left.lastAccessed || 0));
+}
+
+async function sendToastToAvailableTab(data) {
+  const tabs = await findToastTabs();
+  for (const tab of tabs) {
+    if (await sendToastToTab(tab.id, data)) return true;
+  }
+  return false;
 }
 
 async function sendToastToTab(tabId, data) {
@@ -581,7 +589,10 @@ async function configureAlarm(force = false) {
   const existing = await chrome.alarms.get(POLL_ALARM);
   if (!force && existing && Number(existing.periodInMinutes) === settings.pollIntervalMinutes) return;
   if (existing) await chrome.alarms.clear(POLL_ALARM);
-  chrome.alarms.create(POLL_ALARM, { delayInMinutes: settings.pollIntervalMinutes, periodInMinutes: settings.pollIntervalMinutes });
+  await chrome.alarms.create(POLL_ALARM, {
+    delayInMinutes: settings.pollIntervalMinutes,
+    periodInMinutes: settings.pollIntervalMinutes
+  });
 }
 
 async function handleMessage(message, sender) {
@@ -594,8 +605,8 @@ async function handleMessage(message, sender) {
     case "feeds:add": return addFeed(data.url);
     case "feeds:remove": return removeFeed(data.feedId);
     case "feeds:refresh": return data.feedId
-      ? { result: await refreshFeed(data.feedId, false), state: publicState(await getState()) }
-      : refreshAll(false);
+      ? { result: await refreshFeed(data.feedId, true), state: publicState(await getState()) }
+      : refreshAll(true);
     case "posts:update": return updatePost(data.postId, data.patch || {});
     case "posts:markAllRead": return markAllRead(data.feedId);
     case "posts:open": return openPost(data.postId);
@@ -611,9 +622,7 @@ async function handleMessage(message, sender) {
     }
     case "toast:test": {
       const settings = await getSettings();
-      const tab = await findToastTab();
-      if (!tab) throw userError("NO_WEB_TAB", "Open a normal website tab first, then test the toast.");
-      const sent = await sendToastToTab(tab.id, {
+      const sent = await sendToastToAvailableTab({
         title: "Toast notifications are working",
         message: "New RSS items will appear here.",
         position: settings.localToastPosition,
@@ -662,7 +671,9 @@ chrome.runtime.onStartup.addListener(() => {
 });
 
 chrome.alarms.onAlarm.addListener(alarm => {
-  if (alarm.name === POLL_ALARM) refreshAll(true).catch(() => undefined);
+  if (alarm.name === POLL_ALARM) {
+    refreshAll(true).catch(error => console.error("[News Feed Pulse] Scheduled refresh failed:", error));
+  }
 });
 
 chrome.tabs.onRemoved.addListener(tabId => activePageFeeds.delete(tabId));
