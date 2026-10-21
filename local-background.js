@@ -5,9 +5,15 @@ importScripts("rss-core.js");
 const Core = globalThis.NewsFeedCore;
 const STATE_KEY = "newsFeedPulseStateV1";
 const POLL_ALARM = "news-feed-pulse-poll";
+const STANDALONE_VERSION = 2;
 const DEFAULT_SETTINGS = Object.freeze({
   localToastEnabled: true,
   localToastPosition: "top-right",
+  localToastDuration: 300000,
+  pollIntervalMinutes: 5,
+  maxPostsPerFeed: 50
+});
+const PREVIOUS_DEFAULT_SETTINGS = Object.freeze({
   localToastDuration: 8000,
   pollIntervalMinutes: 15,
   maxPostsPerFeed: 150
@@ -41,17 +47,30 @@ async function deleteLegacyDatabases() {
 
 async function migrateLegacyData() {
   const all = await chrome.storage.local.get(null);
-  if (all.newsFeedPulseStandaloneVersion === 1) {
+  const storedVersion = Number(all.newsFeedPulseStandaloneVersion) || 0;
+  if (storedVersion >= STANDALONE_VERSION) {
     await deleteLegacyDatabases();
     return;
   }
+  const migratingPreviousDefaults = storedVersion === 1;
+  const migratedSetting = (value, previousDefault, nextDefault) =>
+    migratingPreviousDefaults && Number(value) === previousDefault ? nextDefault : value;
   const settings = {
     localToastEnabled: all.localToastEnabled !== false,
     localToastPosition: ["top-right", "top-left", "bottom-right", "bottom-left"].includes(all.localToastPosition)
       ? all.localToastPosition : DEFAULT_SETTINGS.localToastPosition,
-    localToastDuration: clampNumber(all.localToastDuration, 2000, 60000, DEFAULT_SETTINGS.localToastDuration),
-    pollIntervalMinutes: clampNumber(all.pollIntervalMinutes, 1, 1440, DEFAULT_SETTINGS.pollIntervalMinutes),
-    maxPostsPerFeed: clampNumber(all.maxPostsPerFeed, 25, 500, DEFAULT_SETTINGS.maxPostsPerFeed)
+    localToastDuration: clampNumber(
+      migratedSetting(all.localToastDuration, PREVIOUS_DEFAULT_SETTINGS.localToastDuration, DEFAULT_SETTINGS.localToastDuration),
+      2000, 300000, DEFAULT_SETTINGS.localToastDuration
+    ),
+    pollIntervalMinutes: clampNumber(
+      migratedSetting(all.pollIntervalMinutes, PREVIOUS_DEFAULT_SETTINGS.pollIntervalMinutes, DEFAULT_SETTINGS.pollIntervalMinutes),
+      1, 1440, DEFAULT_SETTINGS.pollIntervalMinutes
+    ),
+    maxPostsPerFeed: clampNumber(
+      migratedSetting(all.maxPostsPerFeed, PREVIOUS_DEFAULT_SETTINGS.maxPostsPerFeed, DEFAULT_SETTINGS.maxPostsPerFeed),
+      25, 500, DEFAULT_SETTINGS.maxPostsPerFeed
+    )
   };
   const standaloneState = all[STATE_KEY];
   const state = standaloneState && Array.isArray(standaloneState.feeds) && Array.isArray(standaloneState.posts)
@@ -59,7 +78,9 @@ async function migrateLegacyData() {
   try { if (chrome.storage.sync?.clear) await chrome.storage.sync.clear(); } catch (_error) {}
   try { if (chrome.storage.session?.clear) await chrome.storage.session.clear(); } catch (_error) {}
   await chrome.storage.local.clear();
-  await chrome.storage.local.set({ ...settings, [STATE_KEY]: state, newsFeedPulseStandaloneVersion: 1 });
+  await chrome.storage.local.set({ ...settings, [STATE_KEY]: state, newsFeedPulseStandaloneVersion: STANDALONE_VERSION });
+  await trimPosts(state);
+  await chrome.storage.local.set({ [STATE_KEY]: state });
   await deleteLegacyDatabases();
 }
 
@@ -89,7 +110,7 @@ async function getSettings() {
     localToastEnabled: stored.localToastEnabled !== false,
     localToastPosition: ["top-right", "top-left", "bottom-right", "bottom-left"].includes(stored.localToastPosition)
       ? stored.localToastPosition : DEFAULT_SETTINGS.localToastPosition,
-    localToastDuration: clampNumber(stored.localToastDuration, 2000, 60000, DEFAULT_SETTINGS.localToastDuration),
+    localToastDuration: clampNumber(stored.localToastDuration, 2000, 300000, DEFAULT_SETTINGS.localToastDuration),
     pollIntervalMinutes: clampNumber(stored.pollIntervalMinutes, 1, 1440, DEFAULT_SETTINGS.pollIntervalMinutes),
     maxPostsPerFeed: clampNumber(stored.maxPostsPerFeed, 25, 500, DEFAULT_SETTINGS.maxPostsPerFeed)
   };
@@ -368,8 +389,9 @@ async function trimPosts(state) {
   for (const feed of state.feeds) {
     const posts = state.posts.filter(post => post.feedId === feed.id)
       .sort((left, right) => (right.sortAt || 0) - (left.sortAt || 0));
-    const starred = posts.filter(post => post.starred);
-    const regular = posts.filter(post => !post.starred).slice(0, settings.maxPostsPerFeed);
+    const starred = posts.filter(post => post.starred).slice(0, settings.maxPostsPerFeed);
+    const regular = posts.filter(post => !post.starred)
+      .slice(0, Math.max(0, settings.maxPostsPerFeed - starred.length));
     kept.push(...starred, ...regular);
   }
   const unique = new Map();
@@ -578,7 +600,15 @@ async function handleMessage(message, sender) {
     case "posts:markAllRead": return markAllRead(data.feedId);
     case "posts:open": return openPost(data.postId);
     case "page:active": return getActivePage();
-    case "settings:changed": await configureAlarm(true); return getSettings();
+    case "settings:changed": {
+      await configureAlarm(true);
+      await runLocked(async () => {
+        const state = await getState();
+        await trimPosts(state);
+        await saveState(state);
+      });
+      return getSettings();
+    }
     case "toast:test": {
       const settings = await getSettings();
       const tab = await findToastTab();

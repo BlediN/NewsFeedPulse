@@ -2,11 +2,19 @@
 
 const assert = require("node:assert/strict");
 
-const stored = { legacyAuthToken: "remove-me", localToastPosition: "bottom-left" };
+const stored = {
+  legacyAuthToken: "remove-me",
+  localToastPosition: "bottom-left",
+  localToastDuration: 8000,
+  pollIntervalMinutes: 15,
+  maxPostsPerFeed: 150,
+  newsFeedPulseStandaloneVersion: 1
+};
 let messageListener;
 let version = 1;
 let redirectTarget = "https://redirect.test/old.xml";
 const changeListeners = [];
+let createdAlarm = null;
 
 function storageGet(keys) {
   if (keys === null) return { ...stored };
@@ -33,7 +41,12 @@ global.chrome = {
     onStartup: { addListener: () => {} },
     getURL: path => `chrome-extension://test/${path}`
   },
-  alarms: { get: async () => null, clear: async () => true, create: () => {}, onAlarm: { addListener: () => {} } },
+  alarms: {
+    get: async () => null,
+    clear: async () => true,
+    create: (name, options) => { createdAlarm = { name, ...options }; },
+    onAlarm: { addListener: () => {} }
+  },
   tabs: {
     query: async () => [{ id: 1, url: "https://example.test/page", title: "Example" }],
     sendMessage: async () => {}, create: async () => {}, onRemoved: { addListener: () => {} }
@@ -70,7 +83,7 @@ global.fetch = async url => {
   if (href === "https://fallback.test/feed") return new Response(rss("Fallback feed", ["fallback-1"]), { status: 200, headers: { "content-type": "application/rss+xml" } });
   if (href.endsWith("/one.xml")) return new Response(rss("One", version === 1 ? ["1"] : ["2", "1"]), { status: 200, headers: { "content-type": "application/rss+xml" } });
   if (href.endsWith("/two.xml")) return new Response(rss("Two", ["a"]), { status: 200, headers: { "content-type": "application/rss+xml" } });
-  if (href.endsWith("/large.xml")) return new Response(rss("Large", Array.from({ length: 30 }, (_value, index) => `large-${index}`)), { status: 200, headers: { "content-type": "application/rss+xml" } });
+  if (href.endsWith("/large.xml")) return new Response(rss("Large", Array.from({ length: 60 }, (_value, index) => `large-${index}`)), { status: 200, headers: { "content-type": "application/rss+xml" } });
   if (href.includes("redirect.test/") && href.endsWith(".xml")) return responseAt(rss("Redirect", ["unchanged-guid"]), redirectTarget);
   return new Response("missing", { status: 404 });
 };
@@ -92,7 +105,12 @@ function request(type, data = {}) {
   assert.equal(initial.feeds.length, 0);
   assert.equal(stored.legacyAuthToken, undefined);
   assert.equal(stored.localToastPosition, "bottom-left");
-  assert.equal(stored.newsFeedPulseStandaloneVersion, 1);
+  assert.equal(stored.newsFeedPulseStandaloneVersion, 2);
+  assert.equal(stored.localToastDuration, 300000);
+  assert.equal(stored.pollIntervalMinutes, 5);
+  assert.equal(stored.maxPostsPerFeed, 50);
+  await request("settings:changed");
+  assert.equal(createdAlarm.periodInMinutes, 5);
 
   const discovery = await request("feeds:discover", { url: "https://example.test/page" });
   assert.equal(discovery.kind, "directory");
@@ -118,7 +136,8 @@ function request(type, data = {}) {
   assert.equal(refreshed.state.unreadCount, 1);
 
   const large = await request("feeds:add", { url: "https://example.test/large.xml" });
-  assert.equal(large.importedPosts, 30);
+  assert.equal(large.importedPosts, 60);
+  assert.equal(large.state.posts.filter(post => post.feedId === large.feed.id).length, 50);
   const largeRefresh = await request("feeds:refresh", { feedId: large.feed.id });
   assert.equal(largeRefresh.state.unreadCount, 1, "trimmed historical items must not become unread again");
 

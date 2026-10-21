@@ -148,24 +148,35 @@ async function toggleStar(postId, starred) {
   } catch (error) { setMessage(ui.readerMessage, error.message, "error"); }
 }
 
-function showReader() {
+function closeAddView(restoreFocus = true) {
   ui.addView.hidden = true;
-  ui.readerView.hidden = false;
   ui.add.classList.remove("active");
+  ui.add.setAttribute("aria-expanded", "false");
+  if (restoreFocus) ui.add.focus();
 }
 
-async function showAddView() {
-  ui.readerView.hidden = true;
-  ui.addView.hidden = false;
-  ui.add.classList.add("active");
+let addViewInitialized = false;
+let activePageLoaded = false;
+
+function initializeAddView() {
+  if (addViewInitialized || !activePageLoaded) return;
+  addViewInitialized = true;
+  if (ui.feedUrl.value.trim()) return;
   candidates = [];
   renderCandidates();
   setMessage(ui.discoveryStatus, "");
   const preferred = activePage.candidates?.[0]?.url || activePage.url || "";
   ui.feedUrl.value = preferred;
+  if (activePage.url) discover(activePage.url, activePage.candidates);
+}
+
+function showAddView() {
+  ui.addView.hidden = false;
+  ui.add.classList.add("active");
+  ui.add.setAttribute("aria-expanded", "true");
+  initializeAddView();
   ui.feedUrl.focus();
   ui.feedUrl.select();
-  if (activePage.url) await discover(activePage.url, activePage.candidates);
 }
 
 async function discover(value, pageCandidates = []) {
@@ -272,8 +283,8 @@ async function refreshFeeds() {
 }
 
 ui.settings.addEventListener("click", () => chrome.runtime.openOptionsPage());
-ui.add.addEventListener("click", showAddView);
-ui.back.addEventListener("click", showReader);
+ui.add.addEventListener("click", () => ui.addView.hidden ? showAddView() : closeAddView());
+ui.back.addEventListener("click", () => closeAddView());
 ui.refresh.addEventListener("click", refreshFeeds);
 ui.search.addEventListener("input", renderPosts);
 ui.feedFilter.addEventListener("change", () => { ui.removeFeed.hidden = !ui.feedFilter.value; renderPosts(); });
@@ -298,12 +309,22 @@ ui.removeFeed.addEventListener("click", async () => {
   } catch (error) { setMessage(ui.readerMessage, error.message, "error"); }
 });
 
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !ui.addView.hidden) closeAddView();
+});
+
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && changes.newsFeedPulseStateV1) request("state:get").then(value => { readerState = value; renderState(); }).catch(() => undefined);
 });
 
 Promise.all([request("state:get"), request("page:active")])
-  .then(([state, page]) => { readerState = state; activePage = page; renderState(); })
+  .then(([state, page]) => {
+    readerState = state;
+    activePage = page;
+    activePageLoaded = true;
+    renderState();
+    if (!ui.addView.hidden) initializeAddView();
+  })
   .catch(error => {
     setMessage(ui.readerMessage, `Could not start the local reader: ${error.message}`, "error");
     renderState();

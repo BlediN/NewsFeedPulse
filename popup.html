@@ -16,8 +16,28 @@
           <p id="header-status">Local RSS reader</p>
         </div>
         <button id="refresh-button" class="icon-button" type="button" title="Refresh feeds" aria-label="Refresh feeds">↻</button>
-        <button id="add-button" class="icon-button primary" type="button" title="Find and add a feed" aria-label="Find and add a feed">+</button>
+        <button id="add-button" class="icon-button primary" type="button" title="Find and add a feed" aria-label="Toggle add feed panel" aria-controls="add-view" aria-expanded="false">+</button>
       </header>
+
+      <section id="add-view" class="add-view" aria-label="Add a feed" hidden>
+        <div class="add-heading">
+          <div><h2>Add a feed</h2><p>Paste a feed or website URL.</p></div>
+          <button id="add-back-button" class="icon-button" type="button" title="Collapse" aria-label="Collapse add feed panel">×</button>
+        </div>
+        <form id="discover-form">
+          <label for="feed-url">Website or feed URL</label>
+          <div class="url-row">
+            <input id="feed-url" type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="https://example.com/feed.xml" required>
+            <button id="discover-button" type="submit">Find feeds</button>
+          </div>
+        </form>
+        <div id="discovery-status" class="message" role="status"></div>
+        <div id="discovery-actions" class="discovery-actions" hidden>
+          <strong id="result-count"></strong>
+          <button id="add-all-button" class="text-button" type="button">Add all</button>
+        </div>
+        <div id="candidate-list" class="candidate-list"></div>
+      </section>
 
       <section id="reader-view">
         <div class="filter-bar">
@@ -42,25 +62,6 @@
         <main id="post-list" aria-live="polite"></main>
       </section>
 
-      <section id="add-view" class="add-view" hidden>
-        <div class="add-heading">
-          <button id="add-back-button" class="icon-button" type="button" aria-label="Back to posts">←</button>
-          <div><h2>Add a feed</h2><p>Paste a feed URL or a page that lists feeds.</p></div>
-        </div>
-        <form id="discover-form">
-          <label for="feed-url">Website or feed URL</label>
-          <div class="url-row">
-            <input id="feed-url" type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="https://example.com/feed.xml" required>
-            <button id="discover-button" type="submit">Find feeds</button>
-          </div>
-        </form>
-        <div id="discovery-status" class="message" role="status"></div>
-        <div id="discovery-actions" class="discovery-actions" hidden>
-          <strong id="result-count"></strong>
-          <button id="add-all-button" class="text-button" type="button">Add all</button>
-        </div>
-        <div id="candidate-list" class="candidate-list"></div>
-      </section>
     </div>
     <template id="post-template">
       <article class="post-card">

@@ -11,9 +11,9 @@ try {
 const defaults = {
   localToastEnabled: true,
   localToastPosition: "top-right",
-  localToastDuration: 8000,
-  pollIntervalMinutes: 15,
-  maxPostsPerFeed: 150
+  localToastDuration: 300000,
+  pollIntervalMinutes: 5,
+  maxPostsPerFeed: 50
 };
 const enabledInput = document.getElementById("toast-enabled");
 const positionInput = document.getElementById("toast-position");

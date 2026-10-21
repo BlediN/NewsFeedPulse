@@ -42,15 +42,16 @@
           <select id="toast-duration">
             <option value="5000">5 seconds</option><option value="8000">8 seconds</option>
             <option value="12000">12 seconds</option><option value="20000">20 seconds</option>
+            <option value="60000">1 minute</option><option value="300000" selected>5 minutes (default)</option>
           </select>
           <label for="poll-interval">Check for news</label>
           <select id="poll-interval">
-            <option value="5">Every 5 minutes</option><option value="15">Every 15 minutes</option>
+            <option value="5" selected>Every 5 minutes (default)</option><option value="15">Every 15 minutes</option>
             <option value="30">Every 30 minutes</option><option value="60">Every hour</option>
           </select>
           <label for="max-posts">Keep per feed</label>
           <select id="max-posts">
-            <option value="50">50 posts</option><option value="100">100 posts</option>
+            <option value="50" selected>50 posts (default)</option><option value="100">100 posts</option>
             <option value="150">150 posts</option><option value="300">300 posts</option>
           </select>
         </div>

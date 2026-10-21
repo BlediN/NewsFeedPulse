@@ -67,7 +67,7 @@
     });
     stack.prepend(toast);
     while (stack.children.length > 4) stack.lastElementChild.remove();
-    const duration = Math.max(2000, Math.min(Number(data.duration) || 8000, 60000));
+    const duration = Math.max(2000, Math.min(Number(data.duration) || 300000, 300000));
     window.setTimeout(() => toast.remove(), duration);
   }
 
