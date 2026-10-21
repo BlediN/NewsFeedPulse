@@ -15,14 +15,15 @@
 
       <section>
         <h2>Add an RSS or Atom feed</h2>
-        <p>This sends the URL directly to the extension’s local parser and database. No Feeder account or discovery API is used.</p>
+        <p>Paste a direct feed URL or a webpage that lists feeds. Everything is checked by the extension itself.</p>
         <form id="add-feed-form">
-          <label for="feed-url">Feed URL</label>
+          <label for="feed-url">Website or feed URL</label>
           <div class="row">
-            <input id="feed-url" name="feedUrl" type="url" inputmode="url" required placeholder="https://example.com/feed.xml">
-            <button type="submit">Add feed</button>
+            <input id="feed-url" name="feedUrl" type="text" inputmode="url" required placeholder="https://example.com/feed.xml">
+            <button id="find-feeds" type="submit">Find feeds</button>
           </div>
           <output id="feed-status" aria-live="polite"></output>
+          <div id="feed-results" class="feed-results"></div>
         </form>
       </section>
 
@@ -42,19 +43,30 @@
             <option value="5000">5 seconds</option><option value="8000">8 seconds</option>
             <option value="12000">12 seconds</option><option value="20000">20 seconds</option>
           </select>
+          <label for="poll-interval">Check for news</label>
+          <select id="poll-interval">
+            <option value="5">Every 5 minutes</option><option value="15">Every 15 minutes</option>
+            <option value="30">Every 30 minutes</option><option value="60">Every hour</option>
+          </select>
+          <label for="max-posts">Keep per feed</label>
+          <select id="max-posts">
+            <option value="50">50 posts</option><option value="100">100 posts</option>
+            <option value="150">150 posts</option><option value="300">300 posts</option>
+          </select>
         </div>
         <div class="actions">
           <button id="save-settings" type="button">Save settings</button>
           <button id="test-toast" class="secondary" type="button">Test toast</button>
-          <a href="reader/index.html">Open reader</a>
+          <a href="popup.html" target="_blank">Open reader</a>
         </div>
         <output id="settings-status" aria-live="polite"></output>
       </section>
 
-      <section class="privacy">
-        <h2>Privacy mode</h2>
-        <p>Analytics, crash uploads, Feeder cloud sync, remote discovery, billing, AI feeds, web push, and Feeder-hosted content extraction are disabled. Direct RSS/Atom downloads remain enabled.</p>
+      <section>
+        <div class="section-heading"><div><h2>Subscribed feeds</h2><p>Feeds and posts are stored only in this browser profile.</p></div><button id="refresh-feeds" class="secondary" type="button">Refresh all</button></div>
+        <div id="saved-feeds" class="saved-feeds"></div>
       </section>
+
     </main>
     <script src="local-settings.js"></script>
   </body>

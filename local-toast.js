@@ -1,12 +1,15 @@
 (() => {
+  if (globalThis.__newsFeedPulseToastInstalled) return;
+  globalThis.__newsFeedPulseToastInstalled = true;
   const hostId = "news-feed-pulse-toast-host";
+  let toastHost = null;
+  let toastStack = null;
 
-  function ensureHost(position) {
-    let host = document.getElementById(hostId);
-    if (!host) {
-      host = document.createElement("div");
-      host.id = hostId;
-      const shadow = host.attachShadow({ mode: "open" });
+  function ensureStack(position) {
+    if (!toastHost || !toastHost.isConnected) {
+      toastHost = document.createElement("div");
+      toastHost.id = hostId;
+      const shadow = toastHost.attachShadow({ mode: "closed" });
       shadow.innerHTML = `
         <style>
           :host { all: initial; position: fixed; z-index: 2147483647; pointer-events: none; }
@@ -29,14 +32,15 @@
           @keyframes enter { from { opacity: 0; transform: translateY(-8px) scale(.98); } }
         </style>
         <div id="stack" role="region" aria-label="RSS feed notifications"></div>`;
-      document.documentElement.appendChild(host);
+      toastStack = shadow.getElementById("stack");
+      document.documentElement.appendChild(toastHost);
     }
-    host.dataset.position = position || "top-right";
-    return host;
+    toastHost.dataset.position = position || "top-right";
+    return toastStack;
   }
 
   function showToast(data) {
-    const stack = ensureHost(data.position).shadowRoot.getElementById("stack");
+    const stack = ensureStack(data.position);
     const toast = document.createElement("div");
     toast.className = "toast";
     toast.setAttribute("role", "status");
@@ -58,7 +62,7 @@
     close.addEventListener("click", (event) => { event.stopPropagation(); toast.remove(); });
     toast.append(icon, text, close);
     toast.addEventListener("click", () => {
-      if (data.link) chrome.runtime.sendMessage({ type: "localToast:open", data: { url: data.link } });
+      if (data.link) chrome.runtime.sendMessage({ type: "localToast:open", data: { postId: data.postId, url: data.link } }).catch(() => undefined);
       toast.remove();
     });
     stack.prepend(toast);
