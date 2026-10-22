@@ -1,1 +1,0 @@
-document.getElementById("output").textContent=JSON.parse(JSON.parse(localStorage.feederSystemSettings).client_id||'"no id found"');

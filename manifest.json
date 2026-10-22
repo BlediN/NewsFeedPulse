@@ -1,52 +1,31 @@
 {
    "action": {
       "default_icon": "extension-icons/icon-retina.png",
-      "default_popup": "reader/index.html?in_extension_popup=true"
+      "default_popup": "popup.html"
    },
    "background": {
-      "service_worker": "mv3.js"
-   },
-   "commands": {
-      "_execute_action": {
-         "suggested_key": {
-            "default": "Ctrl+Shift+R",
-            "linux": "Ctrl+Shift+R",
-            "mac": "Alt+Shift+R",
-            "windows": "Ctrl+Shift+R"
-         }
-      }
+      "service_worker": "local-background.js"
    },
    "content_scripts": [ {
-      "js": [ "content.js" ],
-      "matches": [ "http://*/*", "https://*/*" ]
-   }, {
-      "all_frames": true,
-      "js": [ "content/page_plugin.js" ],
+      "js": [ "content-feed-detector.js", "local-toast.js" ],
       "matches": [ "http://*/*", "https://*/*" ],
       "run_at": "document_end"
-   }, {
-      "js": [ "feeder_api.js" ],
-      "matches": [ "http://feeder.co/*", "http://*.feeder.co/*", "https://feeder.co/*", "https://*.feeder.co/*", "https://feederstaging.com/*", "https://*.feederstaging.com/*", "http://feederstaging.com/*", "http://*.feederstaging.com/*", "http://feederdev.com/*", "http://*.feederdev.com/*" ],
-      "run_at": "document_start"
    } ],
-   "default_locale": "en",
-   "description": "Get a simple overview of your RSS and Atom feeds in the toolbar",
+   "description": "A private, local RSS and Atom reader with in-page news alerts",
    "host_permissions": [ "http://*/*", "https://*/*" ],
    "icons": {
       "128": "extension-icons/icon128x128.png",
       "19": "extension-icons/icon-retina.png",
       "48": "extension-icons/icon48x48.png"
    },
-   "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDSk70DzQ0XRPEINteLpZyjPmFVPgbPePTiy3z2VEWHy8e1hFbOdP32SuiWcshHuZHvCvU3oZdZHJ9h3zKBw100ZzOcIPa8UHxi8klYfwf2QJu+yAYIAm36IlRin8JnwCWIoE7ZcFfLVyXci6LmnIepS69x+asjyPH7zEjmNfcYwIDAQAB",
    "manifest_version": 3,
-   "name": "RSS Feed Reader",
-   "options_page": "settings_redirect.html",
-   "permissions": [ "tabs", "chrome://favicon/", "storage", "scripting", "notifications", "declarativeNetRequest", "unlimitedStorage", "contextMenus", "alarms", "offscreen" ],
-   "short_name": "feeder",
-   "update_url": "https://clients2.google.com/service/update2/crx",
-   "version": "8.1.0",
+   "name": "News Feed Pulse",
+   "options_page": "local-settings.html",
+   "permissions": [ "storage", "unlimitedStorage", "alarms", "scripting" ],
+   "short_name": "Feed Pulse",
+   "version": "9.3.0",
    "web_accessible_resources": [ {
       "matches": [ "https://*/*", "http://*/*" ],
-      "resources": [ "extension-icons/icon48x48.png", "extension-icons/icon-retina.png", "extension-icons/subscribe-logo@2x.png" ]
+      "resources": [ "extension-icons/icon48x48.png" ]
    } ]
 }

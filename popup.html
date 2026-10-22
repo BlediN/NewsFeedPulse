@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>News Feed Pulse</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <div id="app">
+      <header class="app-header">
+        <button id="settings-button" class="icon-button" type="button" title="Settings" aria-label="Open settings">⚙</button>
+        <img class="brand-icon" src="extension-icons/icon48x48.png" alt="">
+        <div class="brand-copy">
+          <h1>News Feed Pulse</h1>
+          <p id="header-status">Local RSS reader</p>
+        </div>
+        <button id="refresh-button" class="icon-button" type="button" title="Refresh feeds" aria-label="Refresh feeds">↻</button>
+        <button id="add-button" class="icon-button primary" type="button" title="Find and add a feed" aria-label="Toggle add feed panel" aria-controls="add-view" aria-expanded="false">+</button>
+      </header>
+
+      <section id="add-view" class="add-view" aria-label="Add a feed" hidden>
+        <div class="add-heading">
+          <div><h2>Add a feed</h2><p>Paste a feed or website URL.</p></div>
+          <button id="add-back-button" class="icon-button" type="button" title="Collapse" aria-label="Collapse add feed panel">×</button>
+        </div>
+        <form id="discover-form">
+          <label for="feed-url">Website or feed URL</label>
+          <div class="url-row">
+            <input id="feed-url" type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="https://example.com/feed.xml" required>
+            <button id="discover-button" type="submit">Find feeds</button>
+          </div>
+        </form>
+        <div id="discovery-status" class="message" role="status"></div>
+        <div id="discovery-actions" class="discovery-actions" hidden>
+          <strong id="result-count"></strong>
+          <button id="add-all-button" class="text-button" type="button">Add all</button>
+        </div>
+        <div id="candidate-list" class="candidate-list"></div>
+      </section>
+
+      <section id="reader-view">
+        <div class="filter-bar">
+          <div class="filter-tabs" role="group" aria-label="Post filter">
+            <button class="filter active" data-filter="all" type="button">All</button>
+            <button class="filter" data-filter="unread" type="button">Unread</button>
+            <button class="filter" data-filter="starred" type="button">Starred</button>
+          </div>
+          <label class="search-box">
+            <span aria-hidden="true">⌕</span>
+            <input id="search-input" type="search" placeholder="Search posts" aria-label="Search posts">
+          </label>
+        </div>
+
+        <div class="feed-bar">
+          <select id="feed-filter" aria-label="Choose feed"><option value="">All feeds</option></select>
+          <button id="mark-all-button" class="text-button" type="button">Mark read</button>
+          <button id="remove-feed-button" class="text-button danger" type="button" hidden>Remove</button>
+        </div>
+
+        <div id="reader-message" class="message" role="status" hidden></div>
+        <main id="post-list" aria-live="polite"></main>
+      </section>
+
+    </div>
+    <template id="post-template">
+      <article class="post-card">
+        <button class="post-open" type="button">
+          <span class="post-title"></span>
+          <span class="post-meta"></span>
+          <span class="post-summary"></span>
+        </button>
+        <button class="star-button" type="button" aria-label="Star post" title="Star post">☆</button>
+      </article>
+    </template>
+    <template id="candidate-template">
+      <div class="candidate-card">
+        <div><strong class="candidate-title"></strong><span class="candidate-url"></span><small class="candidate-meta"></small></div>
+        <button class="candidate-add" type="button">Add</button>
+      </div>
+    </template>
+    <script src="popup.js"></script>
+  </body>
+</html>
