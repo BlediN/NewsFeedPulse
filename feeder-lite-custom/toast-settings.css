@@ -1,0 +1,22 @@
+:root { color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+body { margin: 0; color: #172033; background: #f4f7f8; }
+main { box-sizing: border-box; width: min(760px, calc(100% - 32px)); margin: 48px auto; padding: 32px; background: #fff; border: 1px solid #dfe5e8; border-radius: 18px; box-shadow: 0 16px 44px rgba(15, 23, 42, .09); }
+.brand { display: flex; gap: 10px; align-items: center; color: #526071; font-size: 14px; font-weight: 600; }
+.brand img { width: 30px; height: 30px; }
+h1 { margin: 24px 0 8px; font-size: 30px; }
+.intro { margin: 0 0 28px; color: #657085; line-height: 1.55; }
+fieldset { padding: 0; border: 0; }
+legend { margin-bottom: 12px; font-size: 14px; font-weight: 700; }
+.choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+label { display: grid; grid-template-columns: 20px 76px 1fr; gap: 12px; align-items: center; padding: 16px; border: 2px solid #dce3e7; border-radius: 12px; cursor: pointer; }
+label:has(input:checked) { border-color: #00a66a; background: #effbf6; }
+input { accent-color: #00a66a; }
+.preview { position: relative; display: block; width: 72px; height: 44px; background: #e9eef1; border: 1px solid #cfd8dd; border-radius: 6px; }
+.preview::after { position: absolute; width: 23px; height: 10px; content: ""; background: #00a66a; border-radius: 3px; }
+.preview.top-right::after { top: 5px; right: 5px; }
+.preview.top-left::after { top: 5px; left: 5px; }
+.preview.bottom-right::after { right: 5px; bottom: 5px; }
+.preview.bottom-left::after { bottom: 5px; left: 5px; }
+#status { min-height: 20px; margin: 18px 0 0; color: #008554; font-size: 14px; font-weight: 600; }
+@media (max-width: 620px) { main { margin: 16px auto; padding: 22px; } .choices { grid-template-columns: 1fr; } }
+@media (prefers-color-scheme: dark) { body { color: #f5f7fa; background: #111722; } main { background: #1b2230; border-color: #333e50; } .intro, .brand { color: #b3bdcc; } label { border-color: #3b4658; } label:has(input:checked) { background: #17362d; } .preview { background: #2b3443; border-color: #4a5669; } #status { color: #43d9a1; } }

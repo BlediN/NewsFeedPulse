@@ -17,7 +17,8 @@
       }
    },
    "content_scripts": [ {
-      "js": [ "content.js" ],
+      "css": [ "toast-notifications.css" ],
+      "js": [ "content.js", "toast-notifications.js" ],
       "matches": [ "http://*/*", "https://*/*" ]
    }, {
       "all_frames": true,
@@ -40,8 +41,8 @@
    "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDSk70DzQ0XRPEINteLpZyjPmFVPgbPePTiy3z2VEWHy8e1hFbOdP32SuiWcshHuZHvCvU3oZdZHJ9h3zKBw100ZzOcIPa8UHxi8klYfwf2QJu+yAYIAm36IlRin8JnwCWIoE7ZcFfLVyXci6LmnIepS69x+asjyPH7zEjmNfcYwIDAQAB",
    "manifest_version": 3,
    "name": "RSS Feed Reader Lite Custom",
-   "options_page": "settings_redirect.html",
-   "permissions": [ "tabs", "favicon", "storage", "scripting", "notifications", "declarativeNetRequest", "unlimitedStorage", "contextMenus", "alarms", "offscreen" ],
+   "options_page": "toast-settings.html",
+   "permissions": [ "tabs", "favicon", "storage", "scripting", "declarativeNetRequest", "unlimitedStorage", "contextMenus", "alarms", "offscreen" ],
    "short_name": "feeder",
    "version": "8.1.0",
    "web_accessible_resources": [ {
