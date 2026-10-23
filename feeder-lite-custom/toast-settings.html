@@ -3,22 +3,46 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Toast notification position</title>
+  <title>Feed and notification settings</title>
   <link rel="stylesheet" href="toast-settings.css">
 </head>
 <body>
   <main>
     <div class="brand"><img src="extension-icons/icon48x48.png" alt=""><span>RSS Feed Reader Lite</span></div>
-    <h1>Toast notifications</h1>
-    <p class="intro">Choose where feed notifications appear in the current browser tab. The default is top right.</p>
+    <h1>Feed and notification settings</h1>
+    <p class="intro">Set the global feed check interval and how toast notifications behave.</p>
     <fieldset>
-      <legend>Screen position</legend>
+      <legend>Feed check interval</legend>
+      <div class="setting-row">
+        <div><strong>Global interval</strong><small>Used unless a source has its own interval.</small></div>
+        <select id="feed-interval" aria-label="Global feed check interval">
+          <option value="1">Every 1 minute</option>
+          <option value="2">Every 2 minutes</option>
+          <option value="5">Every 5 minutes</option>
+          <option value="10">Every 10 minutes</option>
+          <option value="15">Every 15 minutes</option>
+          <option value="30">Every 30 minutes</option>
+          <option value="60">Every 60 minutes</option>
+        </select>
+      </div>
+      <p class="hint">A source-specific interval continues to take priority over this global value.</p>
+    </fieldset>
+    <fieldset>
+      <legend>Toast position</legend>
       <div class="choices">
         <label><input type="radio" name="position" value="top-right"><span class="preview top-right"></span><strong>Top right</strong></label>
         <label><input type="radio" name="position" value="top-left"><span class="preview top-left"></span><strong>Top left</strong></label>
         <label><input type="radio" name="position" value="bottom-right"><span class="preview bottom-right"></span><strong>Bottom right</strong></label>
         <label><input type="radio" name="position" value="bottom-left"><span class="preview bottom-left"></span><strong>Bottom left</strong></label>
       </div>
+    </fieldset>
+    <fieldset>
+      <legend>Toast duration</legend>
+      <div class="duration-choices">
+        <label><input type="radio" name="duration" value="3"><strong>3 seconds</strong><small>Default</small></label>
+        <label><input type="radio" name="duration" value="5"><strong>5 seconds</strong><small>More reading time</small></label>
+      </div>
+      <p class="hint">Every toast is forcibly removed when the selected time is reached.</p>
     </fieldset>
     <p id="status" role="status" aria-live="polite"></p>
   </main>

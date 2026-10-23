@@ -6,7 +6,6 @@
 
   const ROOT_ID = "feeder-toast-root";
   const VALID_POSITIONS = new Set(["top-right", "top-left", "bottom-right", "bottom-left"]);
-  const AUTO_DISMISS_MS = 8000;
 
   function getRoot(position) {
     let root = document.getElementById(ROOT_ID);
@@ -87,7 +86,11 @@
     toast.append(icon, content, close);
     root.appendChild(toast);
 
-    if (!data.requireInteraction) window.setTimeout(() => removeToast(toast), AUTO_DISMISS_MS);
+    const durationSeconds = Number(data.durationSeconds) === 5 ? 5 : 3;
+    window.setTimeout(() => {
+      toast.remove();
+      if (!root.childElementCount) root.remove();
+    }, durationSeconds * 1000);
   }
 
   chrome.runtime.onMessage.addListener((message) => {
