@@ -1,0 +1,98 @@
+{
+   "close": {
+      "message": "Затвори"
+   },
+   "learnMore": {
+      "message": "Научете повече"
+   },
+   "manageSettings": {
+      "message": "Управление на настройките"
+   },
+   "postFrequencyAnumDay": {
+      "message": "Обновява се ежедневно"
+   },
+   "postFrequencyAnumMonth": {
+      "message": "Обновява се ежемесечно"
+   },
+   "postFrequencyAnumRarely": {
+      "message": "Актуализира се рядко"
+   },
+   "postFrequencyAnumWeek": {
+      "message": "Обновява се ежеседмично"
+   },
+   "postFrequencyMultiple": {
+      "message": "Публикации: $NUMBER$",
+      "placeholders": {
+         "NUMBER": {
+            "content": "$1",
+            "example": "3"
+         }
+      }
+   },
+   "postFrequencyOne": {
+      "message": "1 публикация"
+   },
+   "postFrequencyZero": {
+      "message": "Няма публикации"
+   },
+   "settings": {
+      "message": "Настройки"
+   },
+   "subscribeEmailDone": {
+      "message": "Всичко е готово!"
+   },
+   "subscribeEmailError": {
+      "message": "Нещо се обърка при абонирането за имейл новини, опитайте отново по-късно."
+   },
+   "subscribeEmailHeader": {
+      "message": "Получавайте новини в пощата си"
+   },
+   "subscribeEmailInput": {
+      "message": "Въведете своя имейл..."
+   },
+   "subscribeEmailNeedsVerification": {
+      "message": "Проверете пощата си! Изпратихме ви имейл с връзка за потвърждение на абонамента."
+   },
+   "subscribeEmailSubscribe": {
+      "message": "Абонирайте се"
+   },
+   "subscribeEmptyText": {
+      "message": "Това означава, че емисията не съдържа публикации. Причините може да са най-различни."
+   },
+   "subscribeEmptyTitle": {
+      "message": "Тази емисия е празна"
+   },
+   "subscribeNewReaderName": {
+      "message": "Име на нов четец:"
+   },
+   "subscribeNewReaderUrl": {
+      "message": "URL шаблон: (използвайте %s като URL променлива)"
+   },
+   "subscribeNoFeedFound": {
+      "message": "Не намерихме емисия тук"
+   },
+   "subscribeSubscribeAddNew": {
+      "message": "Добавяне на нов..."
+   },
+   "subscribeSubscribeLabel": {
+      "message": "Следвайте тази емисия с"
+   },
+   "subscribeSubscribeNow": {
+      "message": "Следвай"
+   },
+   "subscribeSubscribeSuccess": {
+      "message": "Чудесно! Абонирахте се чрез $READER$",
+      "placeholders": {
+         "READER": {
+            "content": "$1",
+            "example": "Feeder"
+         }
+      }
+   },
+   "subscribeWhatIsText": {
+      "message": "Това е RSS емисия. Можете да я добавите в четец на емисии."
+   },
+   "subscribeWhatIsTitle": {
+      "message": "Какво е това?"
+   }
+}

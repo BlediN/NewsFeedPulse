@@ -1,0 +1,98 @@
+{
+   "close": {
+      "message": "닫기"
+   },
+   "learnMore": {
+      "message": "더 알아보기"
+   },
+   "manageSettings": {
+      "message": "설정 관리"
+   },
+   "postFrequencyAnumDay": {
+      "message": "매일 업데이트"
+   },
+   "postFrequencyAnumMonth": {
+      "message": "매월 업데이트"
+   },
+   "postFrequencyAnumRarely": {
+      "message": "드물게 업데이트"
+   },
+   "postFrequencyAnumWeek": {
+      "message": "매주 업데이트"
+   },
+   "postFrequencyMultiple": {
+      "message": "게시물 $NUMBER$개",
+      "placeholders": {
+         "NUMBER": {
+            "content": "$1",
+            "example": "3"
+         }
+      }
+   },
+   "postFrequencyOne": {
+      "message": "게시물 1개"
+   },
+   "postFrequencyZero": {
+      "message": "게시물 없음"
+   },
+   "settings": {
+      "message": "설정"
+   },
+   "subscribeEmailDone": {
+      "message": "모든 준비가 끝났습니다!"
+   },
+   "subscribeEmailError": {
+      "message": "이메일 업데이트 구독 중 문제가 발생했습니다. 나중에 다시 시도해 주세요."
+   },
+   "subscribeEmailHeader": {
+      "message": "받은편지함으로 업데이트 받기"
+   },
+   "subscribeEmailInput": {
+      "message": "이메일을 입력하세요..."
+   },
+   "subscribeEmailNeedsVerification": {
+      "message": "받은편지함을 확인하세요! 구독 확인 링크가 포함된 이메일을 보내드렸습니다."
+   },
+   "subscribeEmailSubscribe": {
+      "message": "구독"
+   },
+   "subscribeEmptyText": {
+      "message": "피드에 게시물이 없다는 뜻입니다. 여러 가지 이유가 있을 수 있습니다."
+   },
+   "subscribeEmptyTitle": {
+      "message": "이 피드는 비어 있습니다"
+   },
+   "subscribeNewReaderName": {
+      "message": "새 리더 이름:"
+   },
+   "subscribeNewReaderUrl": {
+      "message": "URL 템플릿: (URL 변수로 %s 사용)"
+   },
+   "subscribeNoFeedFound": {
+      "message": "여기에서 피드를 찾을 수 없습니다"
+   },
+   "subscribeSubscribeAddNew": {
+      "message": "새로 추가..."
+   },
+   "subscribeSubscribeLabel": {
+      "message": "이 피드를 팔로우할 앱:"
+   },
+   "subscribeSubscribeNow": {
+      "message": "팔로우"
+   },
+   "subscribeSubscribeSuccess": {
+      "message": "좋아요! $READER$(으)로 구독했습니다",
+      "placeholders": {
+         "READER": {
+            "content": "$1",
+            "example": "Feeder"
+         }
+      }
+   },
+   "subscribeWhatIsText": {
+      "message": "이것은 RSS 피드입니다. 피드 리더에 추가할 수 있습니다."
+   },
+   "subscribeWhatIsTitle": {
+      "message": "이게 뭔가요?"
+   }
+}

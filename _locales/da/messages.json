@@ -1,0 +1,98 @@
+{
+   "close": {
+      "message": "Luk"
+   },
+   "learnMore": {
+      "message": "Lær mere"
+   },
+   "manageSettings": {
+      "message": "Administrer indstillinger"
+   },
+   "postFrequencyAnumDay": {
+      "message": "Opdateres dagligt"
+   },
+   "postFrequencyAnumMonth": {
+      "message": "Opdateres månedligt"
+   },
+   "postFrequencyAnumRarely": {
+      "message": "Sjældne opdateringer"
+   },
+   "postFrequencyAnumWeek": {
+      "message": "Opdateres ugentligt"
+   },
+   "postFrequencyMultiple": {
+      "message": "$NUMBER$ indlæg",
+      "placeholders": {
+         "NUMBER": {
+            "content": "$1",
+            "example": "3"
+         }
+      }
+   },
+   "postFrequencyOne": {
+      "message": "1 indlæg"
+   },
+   "postFrequencyZero": {
+      "message": "Ingen indlæg"
+   },
+   "settings": {
+      "message": "Indstillinger"
+   },
+   "subscribeEmailDone": {
+      "message": "Så er du klar!"
+   },
+   "subscribeEmailError": {
+      "message": "Noget gik galt ved tilmeldingen til e-mailopdateringer, prøv igen senere."
+   },
+   "subscribeEmailHeader": {
+      "message": "Få opdateringer i din indbakke"
+   },
+   "subscribeEmailInput": {
+      "message": "Indtast din e-mail..."
+   },
+   "subscribeEmailNeedsVerification": {
+      "message": "Tjek din indbakke! Vi har sendt dig en e-mail med et link til at bekræfte dit abonnement."
+   },
+   "subscribeEmailSubscribe": {
+      "message": "Abonner"
+   },
+   "subscribeEmptyText": {
+      "message": "Det betyder, at feedet ikke indeholder nogen indlæg. Det kan skyldes mange forskellige årsager."
+   },
+   "subscribeEmptyTitle": {
+      "message": "Dette feed er tomt"
+   },
+   "subscribeNewReaderName": {
+      "message": "Navn på ny læser:"
+   },
+   "subscribeNewReaderUrl": {
+      "message": "URL-skabelon: (brug %s som URL-variabel)"
+   },
+   "subscribeNoFeedFound": {
+      "message": "Vi kunne ikke finde et feed her"
+   },
+   "subscribeSubscribeAddNew": {
+      "message": "Tilføj ny..."
+   },
+   "subscribeSubscribeLabel": {
+      "message": "Følg dette feed med"
+   },
+   "subscribeSubscribeNow": {
+      "message": "Følg"
+   },
+   "subscribeSubscribeSuccess": {
+      "message": "Super! Du abonnerer nu med $READER$",
+      "placeholders": {
+         "READER": {
+            "content": "$1",
+            "example": "Feeder"
+         }
+      }
+   },
+   "subscribeWhatIsText": {
+      "message": "Dette er et RSS-feed. Du kan tilføje det til en feedlæser."
+   },
+   "subscribeWhatIsTitle": {
+      "message": "Hvad er det her?"
+   }
+}

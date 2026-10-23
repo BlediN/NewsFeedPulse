@@ -1,0 +1,98 @@
+{
+   "close": {
+      "message": "Uždaryti"
+   },
+   "learnMore": {
+      "message": "Sužinokite daugiau"
+   },
+   "manageSettings": {
+      "message": "Tvarkyti nustatymus"
+   },
+   "postFrequencyAnumDay": {
+      "message": "Atnaujinama kasdien"
+   },
+   "postFrequencyAnumMonth": {
+      "message": "Atnaujinama kas mėnesį"
+   },
+   "postFrequencyAnumRarely": {
+      "message": "Retai atnaujinama"
+   },
+   "postFrequencyAnumWeek": {
+      "message": "Atnaujinama kas savaitę"
+   },
+   "postFrequencyMultiple": {
+      "message": "Įrašų: $NUMBER$",
+      "placeholders": {
+         "NUMBER": {
+            "content": "$1",
+            "example": "3"
+         }
+      }
+   },
+   "postFrequencyOne": {
+      "message": "1 įrašas"
+   },
+   "postFrequencyZero": {
+      "message": "Nėra įrašų"
+   },
+   "settings": {
+      "message": "Nustatymai"
+   },
+   "subscribeEmailDone": {
+      "message": "Viskas paruošta!"
+   },
+   "subscribeEmailError": {
+      "message": "Prenumeruojant el. pašto naujienas įvyko klaida, bandykite vėliau dar kartą."
+   },
+   "subscribeEmailHeader": {
+      "message": "Gaukite naujienas į savo pašto dėžutę"
+   },
+   "subscribeEmailInput": {
+      "message": "Įveskite savo el. paštą..."
+   },
+   "subscribeEmailNeedsVerification": {
+      "message": "Patikrinkite savo pašto dėžutę! Išsiuntėme jums laišką su nuoroda prenumeratai patvirtinti."
+   },
+   "subscribeEmailSubscribe": {
+      "message": "Prenumeruoti"
+   },
+   "subscribeEmptyText": {
+      "message": "Tai reiškia, kad kanale nėra jokių įrašų. Priežasčių gali būti įvairių."
+   },
+   "subscribeEmptyTitle": {
+      "message": "Šis kanalas tuščias"
+   },
+   "subscribeNewReaderName": {
+      "message": "Naujos skaitytuvės pavadinimas:"
+   },
+   "subscribeNewReaderUrl": {
+      "message": "URL šablonas: (naudokite %s kaip URL kintamąjį)"
+   },
+   "subscribeNoFeedFound": {
+      "message": "Čia kanalo neradome"
+   },
+   "subscribeSubscribeAddNew": {
+      "message": "Pridėti naują..."
+   },
+   "subscribeSubscribeLabel": {
+      "message": "Sekti šį kanalą su"
+   },
+   "subscribeSubscribeNow": {
+      "message": "Sekti"
+   },
+   "subscribeSubscribeSuccess": {
+      "message": "Puiku! Užsiprenumeravote per $READER$",
+      "placeholders": {
+         "READER": {
+            "content": "$1",
+            "example": "Feeder"
+         }
+      }
+   },
+   "subscribeWhatIsText": {
+      "message": "Tai RSS kanalas. Galite jį pridėti prie kanalų skaitytuvės."
+   },
+   "subscribeWhatIsTitle": {
+      "message": "Kas tai?"
+   }
+}

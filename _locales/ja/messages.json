@@ -1,0 +1,98 @@
+{
+   "close": {
+      "message": "閉じる"
+   },
+   "learnMore": {
+      "message": "もっと詳しく知る"
+   },
+   "manageSettings": {
+      "message": "設定を管理"
+   },
+   "postFrequencyAnumDay": {
+      "message": "毎日更新"
+   },
+   "postFrequencyAnumMonth": {
+      "message": "毎月更新"
+   },
+   "postFrequencyAnumRarely": {
+      "message": "めったに更新されない"
+   },
+   "postFrequencyAnumWeek": {
+      "message": "毎週更新"
+   },
+   "postFrequencyMultiple": {
+      "message": "$NUMBER$件の投稿",
+      "placeholders": {
+         "NUMBER": {
+            "content": "$1",
+            "example": "3"
+         }
+      }
+   },
+   "postFrequencyOne": {
+      "message": "1件の投稿"
+   },
+   "postFrequencyZero": {
+      "message": "投稿なし"
+   },
+   "settings": {
+      "message": "設定"
+   },
+   "subscribeEmailDone": {
+      "message": "設定完了!"
+   },
+   "subscribeEmailError": {
+      "message": "メール更新の購読中に問題が発生しました。後でもう一度お試しください。"
+   },
+   "subscribeEmailHeader": {
+      "message": "受信トレイで更新を受け取る"
+   },
+   "subscribeEmailInput": {
+      "message": "メールアドレスを入力..."
+   },
+   "subscribeEmailNeedsVerification": {
+      "message": "受信トレイを確認してください!購読を確認するためのリンクを記載したメールをお送りしました。"
+   },
+   "subscribeEmailSubscribe": {
+      "message": "購読"
+   },
+   "subscribeEmptyText": {
+      "message": "これはフィードに投稿が1件もないことを意味します。さまざまな理由が考えられます。"
+   },
+   "subscribeEmptyTitle": {
+      "message": "このフィードは空です"
+   },
+   "subscribeNewReaderName": {
+      "message": "新しいリーダーの名前:"
+   },
+   "subscribeNewReaderUrl": {
+      "message": "URLテンプレート:(URL変数には%sを使用)"
+   },
+   "subscribeNoFeedFound": {
+      "message": "ここにはフィードが見つかりませんでした"
+   },
+   "subscribeSubscribeAddNew": {
+      "message": "新規追加..."
+   },
+   "subscribeSubscribeLabel": {
+      "message": "このフィードをフォローするアプリ:"
+   },
+   "subscribeSubscribeNow": {
+      "message": "フォローする"
+   },
+   "subscribeSubscribeSuccess": {
+      "message": "完了!$READER$で購読しました",
+      "placeholders": {
+         "READER": {
+            "content": "$1",
+            "example": "Feeder"
+         }
+      }
+   },
+   "subscribeWhatIsText": {
+      "message": "これはRSSフィードです。フィードリーダーに追加できます。"
+   },
+   "subscribeWhatIsTitle": {
+      "message": "これは何?"
+   }
+}

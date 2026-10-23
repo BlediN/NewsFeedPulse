@@ -1,0 +1,86 @@
+{
+   "close": {
+      "message": "Fermer"
+   },
+   "learnMore": {
+      "message": "En savoir plus"
+   },
+   "manageSettings": {
+      "message": "Gérer les paramètres"
+   },
+   "postFrequencyAnumDay": {
+      "message": "Mise à jour quotidienne"
+   },
+   "postFrequencyAnumMonth": {
+      "message": "Mise à jour mensuelle"
+   },
+   "postFrequencyAnumRarely": {
+      "message": "Mise à jour rare"
+   },
+   "postFrequencyAnumWeek": {
+      "message": "Mise à jour hebdomadaire"
+   },
+   "postFrequencyZero": {
+      "message": "Aucun post"
+   },
+   "settings": {
+      "message": "Paramètres"
+   },
+   "subscribeEmailDone": {
+      "message": "Tout est prêt !"
+   },
+   "subscribeEmailError": {
+      "message": "Une erreur s'est produite lors de l'abonnement aux mises à jour par e-mail, veuillez réessayer plus tard."
+   },
+   "subscribeEmailHeader": {
+      "message": "Recevez les mises à jour dans votre boîte mail"
+   },
+   "subscribeEmailInput": {
+      "message": "Saisissez votre e-mail..."
+   },
+   "subscribeEmailNeedsVerification": {
+      "message": "Vérifiez votre boîte mail ! Nous vous avons envoyé un e-mail avec un lien pour confirmer votre abonnement."
+   },
+   "subscribeEmailSubscribe": {
+      "message": "S'abonner"
+   },
+   "subscribeEmptyText": {
+      "message": "Cela signifie que le flux ne contient aucun post. Cela peut avoir de nombreuses raisons différentes."
+   },
+   "subscribeEmptyTitle": {
+      "message": "Ce flux est vide"
+   },
+   "subscribeNewReaderName": {
+      "message": "Nom du nouveau lecteur :"
+   },
+   "subscribeNewReaderUrl": {
+      "message": "Modèle d'URL : (utilisez %s comme variable d'URL)"
+   },
+   "subscribeNoFeedFound": {
+      "message": "Nous n'avons pas trouvé de flux ici"
+   },
+   "subscribeSubscribeAddNew": {
+      "message": "Ajouter un nouveau..."
+   },
+   "subscribeSubscribeLabel": {
+      "message": "Suivre ce flux avec"
+   },
+   "subscribeSubscribeNow": {
+      "message": "Suivre"
+   },
+   "subscribeSubscribeSuccess": {
+      "message": "Parfait ! Vous êtes abonné via $READER$",
+      "placeholders": {
+         "READER": {
+            "content": "$1",
+            "example": "Feeder"
+         }
+      }
+   },
+   "subscribeWhatIsText": {
+      "message": "Ceci est un flux RSS. Vous pouvez l'ajouter à un lecteur de flux."
+   },
+   "subscribeWhatIsTitle": {
+      "message": "Qu'est-ce que c'est ?"
+   }
+}

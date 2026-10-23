@@ -1,0 +1,98 @@
+{
+   "close": {
+      "message": "बंद करें"
+   },
+   "learnMore": {
+      "message": "और जानें"
+   },
+   "manageSettings": {
+      "message": "सेटिंग्स प्रबंधित करें"
+   },
+   "postFrequencyAnumDay": {
+      "message": "रोज़ अपडेट होता है"
+   },
+   "postFrequencyAnumMonth": {
+      "message": "मासिक अपडेट होता है"
+   },
+   "postFrequencyAnumRarely": {
+      "message": "दुर्लभ अपडेट्स"
+   },
+   "postFrequencyAnumWeek": {
+      "message": "साप्ताहिक अपडेट होता है"
+   },
+   "postFrequencyMultiple": {
+      "message": "$NUMBER$ पोस्ट",
+      "placeholders": {
+         "NUMBER": {
+            "content": "$1",
+            "example": "3"
+         }
+      }
+   },
+   "postFrequencyOne": {
+      "message": "1 पोस्ट"
+   },
+   "postFrequencyZero": {
+      "message": "कोई पोस्ट नहीं"
+   },
+   "settings": {
+      "message": "सेटिंग्स"
+   },
+   "subscribeEmailDone": {
+      "message": "सब तैयार है!"
+   },
+   "subscribeEmailError": {
+      "message": "ईमेल अपडेट सब्सक्राइब करते समय कुछ गलत हो गया, कृपया बाद में फिर कोशिश करें।"
+   },
+   "subscribeEmailHeader": {
+      "message": "अपडेट सीधे अपने इनबॉक्स में पाएँ"
+   },
+   "subscribeEmailInput": {
+      "message": "अपना ईमेल दर्ज करें..."
+   },
+   "subscribeEmailNeedsVerification": {
+      "message": "अपना इनबॉक्स देखें! हमने आपको सब्सक्रिप्शन सत्यापित करने के लिए एक लिंक वाला ईमेल भेजा है।"
+   },
+   "subscribeEmailSubscribe": {
+      "message": "सदस्यता लें"
+   },
+   "subscribeEmptyText": {
+      "message": "इसका मतलब है कि फ़ीड में कोई पोस्ट नहीं है। इसके कई अलग-अलग कारण हो सकते हैं।"
+   },
+   "subscribeEmptyTitle": {
+      "message": "यह फ़ीड खाली है"
+   },
+   "subscribeNewReaderName": {
+      "message": "नए रीडर का नाम:"
+   },
+   "subscribeNewReaderUrl": {
+      "message": "URL टेम्पलेट: (URL वेरिएबल के लिए %s इस्तेमाल करें)"
+   },
+   "subscribeNoFeedFound": {
+      "message": "हमें यहाँ कोई फ़ीड नहीं मिला"
+   },
+   "subscribeSubscribeAddNew": {
+      "message": "नया जोड़ें..."
+   },
+   "subscribeSubscribeLabel": {
+      "message": "इस फ़ीड को फ़ॉलो करें इसके साथ:"
+   },
+   "subscribeSubscribeNow": {
+      "message": "फॉलो करें"
+   },
+   "subscribeSubscribeSuccess": {
+      "message": "बढ़िया! आपने $READER$ से सब्सक्राइब कर लिया है",
+      "placeholders": {
+         "READER": {
+            "content": "$1",
+            "example": "Feeder"
+         }
+      }
+   },
+   "subscribeWhatIsText": {
+      "message": "यह एक RSS फ़ीड है। आप इसे किसी फ़ीड रीडर में जोड़ सकते हैं।"
+   },
+   "subscribeWhatIsTitle": {
+      "message": "यह क्या है?"
+   }
+}

@@ -1,0 +1,98 @@
+{
+   "close": {
+      "message": "Zatvori"
+   },
+   "learnMore": {
+      "message": "Saznajte više"
+   },
+   "manageSettings": {
+      "message": "Upravljanje podešavanjima"
+   },
+   "postFrequencyAnumDay": {
+      "message": "Ažurira se dnevno"
+   },
+   "postFrequencyAnumMonth": {
+      "message": "Ažurira se mesečno"
+   },
+   "postFrequencyAnumRarely": {
+      "message": "Retko se ažurira"
+   },
+   "postFrequencyAnumWeek": {
+      "message": "Ažurira se nedeljno"
+   },
+   "postFrequencyMultiple": {
+      "message": "Objava: $NUMBER$",
+      "placeholders": {
+         "NUMBER": {
+            "content": "$1",
+            "example": "3"
+         }
+      }
+   },
+   "postFrequencyOne": {
+      "message": "1 objava"
+   },
+   "postFrequencyZero": {
+      "message": "Nema postova"
+   },
+   "settings": {
+      "message": "Podešavanja"
+   },
+   "subscribeEmailDone": {
+      "message": "Sve je spremno!"
+   },
+   "subscribeEmailError": {
+      "message": "Nešto je pošlo naopako pri pretplati na novosti putem imejla, pokušajte ponovo kasnije."
+   },
+   "subscribeEmailHeader": {
+      "message": "Primajte novosti u svoje prijemno sanduče"
+   },
+   "subscribeEmailInput": {
+      "message": "Unesite svoju e-poštu..."
+   },
+   "subscribeEmailNeedsVerification": {
+      "message": "Proverite svoje sanduče! Poslali smo vam imejl sa linkom za potvrdu pretplate."
+   },
+   "subscribeEmailSubscribe": {
+      "message": "Pretplati se"
+   },
+   "subscribeEmptyText": {
+      "message": "To znači da feed ne sadrži nijednu objavu. Razlozi mogu biti razni."
+   },
+   "subscribeEmptyTitle": {
+      "message": "Ovaj feed je prazan"
+   },
+   "subscribeNewReaderName": {
+      "message": "Naziv novog čitača:"
+   },
+   "subscribeNewReaderUrl": {
+      "message": "URL šablon: (koristite %s kao URL promenljivu)"
+   },
+   "subscribeNoFeedFound": {
+      "message": "Ovde nismo pronašli feed"
+   },
+   "subscribeSubscribeAddNew": {
+      "message": "Dodaj novi..."
+   },
+   "subscribeSubscribeLabel": {
+      "message": "Pratite ovaj feed pomoću"
+   },
+   "subscribeSubscribeNow": {
+      "message": "Prati"
+   },
+   "subscribeSubscribeSuccess": {
+      "message": "Odlično! Pretplaćeni ste preko $READER$",
+      "placeholders": {
+         "READER": {
+            "content": "$1",
+            "example": "Feeder"
+         }
+      }
+   },
+   "subscribeWhatIsText": {
+      "message": "Ovo je RSS feed. Možete ga dodati u čitač feedova."
+   },
+   "subscribeWhatIsTitle": {
+      "message": "Šta je ovo?"
+   }
+}

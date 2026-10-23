@@ -1,0 +1,98 @@
+{
+   "close": {
+      "message": "Sulge"
+   },
+   "learnMore": {
+      "message": "Uuri lähemalt"
+   },
+   "manageSettings": {
+      "message": "Halda seadeid"
+   },
+   "postFrequencyAnumDay": {
+      "message": "Uueneb iga päev"
+   },
+   "postFrequencyAnumMonth": {
+      "message": "Uueneb iga kuu"
+   },
+   "postFrequencyAnumRarely": {
+      "message": "Uuendab harva"
+   },
+   "postFrequencyAnumWeek": {
+      "message": "Uueneb iga nädal"
+   },
+   "postFrequencyMultiple": {
+      "message": "$NUMBER$ postitust",
+      "placeholders": {
+         "NUMBER": {
+            "content": "$1",
+            "example": "3"
+         }
+      }
+   },
+   "postFrequencyOne": {
+      "message": "1 postitus"
+   },
+   "postFrequencyZero": {
+      "message": "Postitusi pole"
+   },
+   "settings": {
+      "message": "Seaded"
+   },
+   "subscribeEmailDone": {
+      "message": "Kõik valmis!"
+   },
+   "subscribeEmailError": {
+      "message": "E-posti uuenduste tellimisel läks midagi valesti, proovi hiljem uuesti."
+   },
+   "subscribeEmailHeader": {
+      "message": "Saa uuendused otse postkasti"
+   },
+   "subscribeEmailInput": {
+      "message": "Sisesta oma e-post..."
+   },
+   "subscribeEmailNeedsVerification": {
+      "message": "Vaata oma postkasti! Saatsime sulle e-kirja lingiga tellimuse kinnitamiseks."
+   },
+   "subscribeEmailSubscribe": {
+      "message": "Tellimus"
+   },
+   "subscribeEmptyText": {
+      "message": "See tähendab, et voos pole ühtegi postitust. Põhjuseid võib olla mitmeid."
+   },
+   "subscribeEmptyTitle": {
+      "message": "See voog on tühi"
+   },
+   "subscribeNewReaderName": {
+      "message": "Uue lugeri nimi:"
+   },
+   "subscribeNewReaderUrl": {
+      "message": "URL-i mall: (kasuta %s URL-i muutujana)"
+   },
+   "subscribeNoFeedFound": {
+      "message": "Me ei leidnud siit voogu"
+   },
+   "subscribeSubscribeAddNew": {
+      "message": "Lisa uus..."
+   },
+   "subscribeSubscribeLabel": {
+      "message": "Jälgi seda voogu rakendusega"
+   },
+   "subscribeSubscribeNow": {
+      "message": "Jälgi"
+   },
+   "subscribeSubscribeSuccess": {
+      "message": "Suurepärane! Oled tellinud rakendusega $READER$",
+      "placeholders": {
+         "READER": {
+            "content": "$1",
+            "example": "Feeder"
+         }
+      }
+   },
+   "subscribeWhatIsText": {
+      "message": "See on RSS-voog. Saad selle lisada voolugerisse."
+   },
+   "subscribeWhatIsTitle": {
+      "message": "Mis see on?"
+   }
+}
