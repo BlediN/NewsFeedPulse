@@ -360,8 +360,8 @@ async function expectNextToast(index, title) {
   };
   installedListener({ reason: "install" });
   await waitFor(
-    () => stored[STATE_KEY].feeds.length === feedsBeforeFreshInstall + 10,
-    "a fresh install should follow the ten selected default sources"
+    () => stored[STATE_KEY].feeds.length === feedsBeforeFreshInstall + 11,
+    "a fresh install should follow the eleven selected default sources"
   );
   await waitFor(
     () => Array.isArray(stored.newsFeedPulsePendingDefaultFeeds) && stored.newsFeedPulsePendingDefaultFeeds.length === 0,

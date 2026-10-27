@@ -57,12 +57,12 @@
             width: 100%; padding: 12px; border: 1px solid #465063; border-left: 4px solid #8b7cff; border-radius: 12px;
             background: #171a21; color: #f8fafc;
             box-shadow: 0 16px 42px rgba(0, 0, 0, .58), 0 0 0 1px rgba(255, 255, 255, .04);
-            font: 14px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             pointer-events: auto; cursor: pointer; animation: enter .18s ease-out; }
           .toast:hover { border-color: #8b7cff; background: #1e232c; }
           img { box-sizing: border-box; width: 38px; height: 38px; padding: 3px; object-fit: contain; border: 1px solid #3a4250; border-radius: 8px; background: #242a34; }
-          .title { margin: 0 0 3px; color: #f8fafc; font-size: 15px; font-weight: 650; overflow-wrap: anywhere; }
-          .message { color: #c4cbd6; overflow-wrap: anywhere; }
+          .title { margin: 0 0 4px; color: #f8fafc; font-size: 15px; font-weight: 600; letter-spacing: -.01em; overflow-wrap: anywhere; }
+          .message { color: #d0d5de; font-size: 14px; font-weight: 400; line-height: 1.45; overflow-wrap: anywhere; }
           button { appearance: none; border: 0; border-radius: 6px; background: transparent; color: #b5bdc9; cursor: pointer;
             font: 20px/20px sans-serif; padding: 0; width: 24px; height: 24px; }
           button:hover, button:focus-visible { background: #343b49; color: #fff; outline: 2px solid #9a8cff; }

@@ -36,5 +36,16 @@ globalThis.NewsFeedPulseSourceCategories = Object.freeze([
       { title: "France 24", description: "International news", url: "https://www.france24.com/en/rss" },
       { title: "UN News", description: "Global affairs", url: "https://news.un.org/feed/subscribe/en/news/all/rss.xml" }
     ]
+  },
+  {
+    title: "Technology",
+    sources: [
+      { title: "The Verge", description: "Technology, products, and digital culture", url: "https://www.theverge.com/rss/index.xml", defaultFollowed: true },
+      { title: "TechCrunch", description: "Startups and technology companies", url: "https://techcrunch.com/feed/" },
+      { title: "Ars Technica", description: "Technology, science, and analysis", url: "https://feeds.arstechnica.com/arstechnica/index" },
+      { title: "WIRED", description: "Technology, science, and culture", url: "https://www.wired.com/feed/rss" },
+      { title: "MIT Technology Review", description: "Emerging technology and its impact", url: "https://www.technologyreview.com/feed/" },
+      { title: "Engadget", description: "Consumer technology and product news", url: "https://www.engadget.com/rss.xml" }
+    ]
   }
 ]);
