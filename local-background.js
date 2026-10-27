@@ -1,6 +1,6 @@
 "use strict";
 
-importScripts("rss-core.js");
+importScripts("rss-core.js", "news-sources.js");
 
 const Core = globalThis.NewsFeedCore;
 const STATE_KEY = "newsFeedPulseStateV1";
@@ -8,6 +8,8 @@ const POLL_ALARM = "news-feed-pulse-poll";
 const TOAST_RETRY_ALARM = "news-feed-pulse-toast-retry";
 const TOAST_STATE_KEY = "newsFeedPulseToastQueueV1";
 const SCHEDULE_INTERVAL_KEY = "newsFeedPulseScheduleInterval";
+const DEFAULT_FEEDS_PENDING_KEY = "newsFeedPulsePendingDefaultFeeds";
+const BROWSER_SESSION_KEY = "newsFeedPulseBrowserSessionReady";
 const STANDALONE_VERSION = 3;
 const DEFAULT_SETTINGS = Object.freeze({
   localToastEnabled: true,
@@ -16,6 +18,10 @@ const DEFAULT_SETTINGS = Object.freeze({
   pollIntervalMinutes: 5,
   maxPostsPerFeed: 50
 });
+const DEFAULT_FEED_URLS = (globalThis.NewsFeedPulseSourceCategories || [])
+  .flatMap(category => category.sources || [])
+  .filter(source => source.defaultFollowed)
+  .map(source => source.url);
 const VERSION_1_DEFAULT_SETTINGS = Object.freeze({
   localToastDuration: 8000,
   pollIntervalMinutes: 15,
@@ -37,6 +43,7 @@ let toastMutationQueue = Promise.resolve();
 let alarmMutationQueue = Promise.resolve();
 let toastDispatchQueue = Promise.resolve();
 let scheduledPollRun = null;
+let browserSessionReady = null;
 
 function emptyState() {
   return { version: 1, feeds: [], posts: [] };
@@ -110,7 +117,11 @@ async function migrateLegacyData() {
   await deleteLegacyDatabases();
 }
 
-const initialization = migrateLegacyData();
+async function clearToolbarBadge() {
+  try { await chrome.action.setBadgeText({ text: "" }); } catch (_error) {}
+}
+
+const initialization = migrateLegacyData().then(clearToolbarBadge);
 
 function runLocked(task) {
   const run = mutationQueue.then(task, task);
@@ -143,7 +154,6 @@ async function getState() {
 
 async function saveState(state) {
   await chrome.storage.local.set({ [STATE_KEY]: state });
-  await updateBadge(state);
 }
 
 async function getSettings() {
@@ -221,6 +231,7 @@ function publicState(state) {
       seenItemIds: _seenItemIds,
       seenItemKeys: _seenItemKeys,
       nextRefreshAt: _nextRefreshAt,
+      skipOfflineCatchUp: _skipOfflineCatchUp,
       ...publicFeed
     } = feed;
     return { ...publicFeed, toastEnabled: feed.toastEnabled !== false };
@@ -231,13 +242,6 @@ function publicState(state) {
     feedTitle: feedById.get(post.feedId)?.title || "RSS feed"
   })).sort((left, right) => (right.sortAt || 0) - (left.sortAt || 0));
   return { feeds, posts, unreadCount: posts.filter(post => !post.read).length };
-}
-
-async function updateBadge(state) {
-  const value = state || await getState();
-  const unread = value.posts.reduce((total, post) => total + (post.read ? 0 : 1), 0);
-  await chrome.action.setBadgeBackgroundColor({ color: "#6657d9" });
-  await chrome.action.setBadgeText({ text: unread ? (unread > 999 ? "999+" : String(unread)) : "" });
 }
 
 function normalizeInput(value) {
@@ -512,6 +516,16 @@ async function addFeed(value, options = {}) {
   return result;
 }
 
+async function followDefaultFeeds(initialize = false) {
+  if (initialize) await chrome.storage.local.set({ [DEFAULT_FEEDS_PENDING_KEY]: DEFAULT_FEED_URLS });
+  const stored = await chrome.storage.local.get({ [DEFAULT_FEEDS_PENDING_KEY]: [] });
+  const pending = Array.isArray(stored[DEFAULT_FEEDS_PENDING_KEY]) ? stored[DEFAULT_FEEDS_PENDING_KEY] : [];
+  if (!pending.length) return;
+  const results = await Promise.allSettled(pending.map(url => addFeed(url)));
+  const failed = pending.filter((_url, index) => results[index].status === "rejected");
+  await chrome.storage.local.set({ [DEFAULT_FEEDS_PENDING_KEY]: failed });
+}
+
 async function setFeedToast(feedId, enabled) {
   if (typeof feedId !== "string" || !feedId) throw userError("INVALID_FEED", "A feed must be selected.");
   if (typeof enabled !== "boolean") throw userError("INVALID_SETTING", "The feed notification setting must be true or false.");
@@ -635,7 +649,7 @@ async function trimPosts(state) {
   state.posts = Array.from(unique.values());
 }
 
-async function refreshFeed(feedId) {
+async function refreshFeed(feedId, options = {}) {
   const before = await getState();
   const feed = before.feeds.find(value => value.id === feedId);
   if (!feed) return { removed: true, newPosts: [] };
@@ -662,6 +676,7 @@ async function refreshFeed(feedId) {
       if (storedFeed) {
         storedFeed.lastFetchedAt = Date.now();
         storedFeed.error = null;
+        delete storedFeed.skipOfflineCatchUp;
         await saveState(state);
       }
     });
@@ -676,8 +691,9 @@ async function refreshFeed(feedId) {
     const retainedPosts = state.posts.filter(post => post.feedId === feedId);
     const retainedKeys = retainedPosts.map(itemKey);
     const knownKeys = new Set([...(storedFeed.seenItemKeys || []), ...retainedKeys]);
-    const newPosts = loaded.parsed.items.filter(item => !knownKeys.has(itemKey(item)))
-      .map(item => toStoredPost(item, feedId, now, false));
+    const unseenItems = loaded.parsed.items.filter(item => !knownKeys.has(itemKey(item)));
+    const discardUnseen = options.discardUnseen || storedFeed.skipOfflineCatchUp === true;
+    const newPosts = discardUnseen ? [] : unseenItems.map(item => toStoredPost(item, feedId, now, false));
     state.posts.push(...newPosts);
     storedFeed.url = Core.normalizeHttpUrl(loaded.url) || storedFeed.url;
     storedFeed.title = loaded.parsed.title || storedFeed.title;
@@ -693,6 +709,7 @@ async function refreshFeed(feedId) {
       ...retainedKeys
     ])).slice(0, 2000);
     storedFeed.error = null;
+    delete storedFeed.skipOfflineCatchUp;
     await trimPosts(state);
     await saveState(state);
     return { newPosts, feed: { ...storedFeed } };
@@ -701,14 +718,14 @@ async function refreshFeed(feedId) {
   return result;
 }
 
-async function refreshFeeds(feedIds, notify = true) {
+async function refreshFeeds(feedIds, notify = true, options = {}) {
   const results = new Array(feedIds.length);
   let cursor = 0;
   async function worker() {
     while (cursor < feedIds.length) {
       const index = cursor;
       cursor += 1;
-      results[index] = await refreshFeed(feedIds[index]);
+      results[index] = await refreshFeed(feedIds[index], options);
     }
   }
   await Promise.all(Array.from({ length: Math.min(3, feedIds.length) }, () => worker()));
@@ -716,9 +733,26 @@ async function refreshFeeds(feedIds, notify = true) {
   return { results, state: publicState(await getState()) };
 }
 
-async function refreshAll(notify = true) {
+async function refreshAll(notify = true, options = {}) {
   const state = await getState();
-  return refreshFeeds(state.feeds.map(feed => feed.id), notify);
+  return refreshFeeds(state.feeds.map(feed => feed.id), notify, options);
+}
+
+async function initializeBrowserSession() {
+  const session = chrome.storage.session;
+  if (!session?.get || !session?.set) return false;
+  const stored = await session.get(BROWSER_SESSION_KEY);
+  if (stored[BROWSER_SESSION_KEY]) return false;
+  await session.set({ [BROWSER_SESSION_KEY]: true });
+  await saveToastState(emptyToastState());
+  await runLocked(async () => {
+    const state = await getState();
+    for (const feed of state.feeds) feed.skipOfflineCatchUp = true;
+    await saveState(state);
+  });
+  await refreshAll(false, { discardUnseen: true });
+  await ensureFeedSchedules(true);
+  return true;
 }
 
 async function enqueueRefreshNotifications(results) {
@@ -729,11 +763,11 @@ async function enqueueRefreshNotifications(results) {
       feed: result.feed,
       posts: [...result.newPosts]
         .sort((left, right) => Number(right.sortAt || 0) - Number(left.sortAt || 0))
-        .slice(0, 3)
+        .slice(0, 2)
     }))
     .sort((left, right) => Number(right.posts[0]?.sortAt || 0) - Number(left.posts[0]?.sortAt || 0));
   const items = [];
-  for (let round = 0; round < 3; round += 1) {
+  for (let round = 0; round < 2; round += 1) {
     for (const group of groups) {
       const post = group.posts[round];
       if (!post) continue;
@@ -789,12 +823,12 @@ async function enqueueToastItems(items) {
     ungrouped.sort((left, right) => Number(left.createdAt || 0) - Number(right.createdAt || 0));
     const groups = Array.from(byFeed, ([feedId, feedItems]) => {
       feedItems.sort((left, right) => Number(right.sortAt || 0) - Number(left.sortAt || 0));
-      const capacity = leasedItem?.feedId === feedId ? 2 : 3;
+      const capacity = leasedItem?.feedId === feedId ? 1 : 2;
       return { feedId, items: feedItems.slice(0, capacity) };
     }).sort((left, right) => Number(right.items[0]?.sortAt || 0) - Number(left.items[0]?.sortAt || 0));
 
     const fairOrder = [];
-    for (let round = 0; round < 3; round += 1) {
+    for (let round = 0; round < 2; round += 1) {
       for (const group of groups) {
         const leasedOffset = leasedItem?.feedId === group.feedId ? 1 : 0;
         const item = group.items[round - leasedOffset];
@@ -1158,6 +1192,7 @@ async function queueTestToast() {
 
 async function handleMessage(message, sender) {
   await initialization;
+  if (browserSessionReady) await browserSessionReady;
   const type = message?.type;
   const data = message?.data || {};
   switch (type) {
@@ -1227,19 +1262,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
-chrome.runtime.onInstalled.addListener(() => {
-  initialization.then(() => ensureFeedSchedules()).then(() => scheduleNextPoll())
-    .then(() => updateBadge()).then(() => requestToastDispatch()).catch(() => undefined);
+chrome.runtime.onInstalled.addListener(details => {
+  initialization.then(async () => {
+    if (details?.reason === "install") await followDefaultFeeds(true);
+    await ensureFeedSchedules();
+    await scheduleNextPoll();
+    await requestToastDispatch();
+  }).catch(() => undefined);
 });
 
 chrome.runtime.onStartup.addListener(() => {
-  initialization.then(() => ensureFeedSchedules()).then(() => scheduleNextPoll())
-    .then(() => updateBadge()).then(() => requestToastDispatch()).catch(() => undefined);
+  browserSessionReady.then(() => ensureFeedSchedules()).then(() => scheduleNextPoll())
+    .then(() => requestToastDispatch()).catch(() => undefined);
 });
 
 chrome.alarms.onAlarm.addListener(alarm => {
   if (alarm.name === POLL_ALARM) {
-    initialization.then(() => runScheduledPoll())
+    initialization.then(() => browserSessionReady).then(() => runScheduledPoll())
       .catch(error => console.error("[News Feed Pulse] Scheduled refresh failed:", error));
   } else if (alarm.name === TOAST_RETRY_ALARM) {
     initialization.then(() => retryExpiredToast()).catch(() => undefined);
@@ -1263,5 +1302,6 @@ chrome.tabs.onRemoved.addListener(tabId => {
   releaseToastForTab(tabId).catch(() => undefined);
 });
 
-initialization.then(() => ensureFeedSchedules()).then(() => scheduleNextPoll())
-  .then(() => updateBadge()).then(() => requestToastDispatch()).catch(() => undefined);
+browserSessionReady = initialization.then(() => followDefaultFeeds()).then(() => initializeBrowserSession());
+browserSessionReady.then(() => ensureFeedSchedules()).then(() => scheduleNextPoll())
+  .then(() => requestToastDispatch()).catch(() => undefined);

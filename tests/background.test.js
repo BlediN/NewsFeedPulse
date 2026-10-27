@@ -17,13 +17,16 @@ const stored = {
   maxPostsPerFeed: 150,
   newsFeedPulseStandaloneVersion: 1
 };
+const sessionStored = {};
 let messageListener;
 let alarmListener;
+let installedListener;
 let sendMessageFailuresRemaining = 0;
 let redirectTarget = "https://redirect.test/old.xml";
 const changeListeners = [];
 const sentTabMessages = [];
 const injectedScripts = [];
+const badgeTexts = [];
 const alarms = new Map();
 const fetchCalls = [];
 let heldFeedFetch = null;
@@ -53,12 +56,22 @@ global.chrome = {
       set: async values => { Object.assign(stored, values); },
       clear: async () => { for (const key of Object.keys(stored)) delete stored[key]; }
     },
+    session: {
+      get: async keys => {
+        if (typeof keys === "string") return keys in sessionStored ? { [keys]: sessionStored[keys] } : {};
+        const result = { ...keys };
+        for (const key of Object.keys(keys || {})) if (key in sessionStored) result[key] = sessionStored[key];
+        return result;
+      },
+      set: async values => { Object.assign(sessionStored, values); },
+      clear: async () => { for (const key of Object.keys(sessionStored)) delete sessionStored[key]; }
+    },
     onChanged: { addListener: listener => changeListeners.push(listener) }
   },
-  action: { setBadgeBackgroundColor: async () => {}, setBadgeText: async () => {} },
+  action: { setBadgeText: async details => { badgeTexts.push(details.text); } },
   runtime: {
     onMessage: eventSlot(listener => { messageListener = listener; }),
-    onInstalled: { addListener: () => {} },
+    onInstalled: eventSlot(listener => { installedListener = listener; }),
     onStartup: { addListener: () => {} },
     getURL: path => `chrome-extension://test/${path}`
   },
@@ -95,9 +108,12 @@ global.chrome = {
   }
 };
 
-global.importScripts = path => {
-  if (path !== "rss-core.js") throw new Error(`Unexpected import: ${path}`);
-  global.NewsFeedCore = require("../rss-core.js");
+global.importScripts = (...paths) => {
+  for (const path of paths) {
+    if (path === "rss-core.js") global.NewsFeedCore = require("../rss-core.js");
+    else if (path === "news-sources.js") require("../news-sources.js");
+    else throw new Error(`Unexpected import: ${path}`);
+  }
 };
 
 function rss(title, itemIds) {
@@ -113,6 +129,13 @@ function responseAt(body, url, contentType = "application/rss+xml") {
 global.fetch = async url => {
   const href = String(url);
   fetchCalls.push(href);
+  const defaultSource = (global.NewsFeedPulseSourceCategories || [])
+    .flatMap(category => category.sources)
+    .find(source => source.defaultFollowed && source.url === href);
+  if (defaultSource) {
+    const itemId = `default-${defaultSource.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+    return new Response(rss(defaultSource.title, [itemId]), { status: 200, headers: { "content-type": "application/rss+xml" } });
+  }
   if (href.endsWith("/page")) {
     return new Response(`<html><a href="/one.xml">RSS one</a><a href="/two.xml">RSS two</a></html>`, {
       status: 200, headers: { "content-type": "text/html" }
@@ -225,13 +248,14 @@ async function expectNextToast(index, title) {
   sentTabMessages.length = 0;
   const refreshed = await request("feeds:refresh");
   assert.equal(refreshed.state.unreadCount, 6);
-  const fairOrder = ["Post one-3", "Post two-3", "Post one-2", "Post two-2", "Post one-1", "Post two-1"];
+  assert.deepEqual(badgeTexts, [""], "the toolbar badge should be cleared once and stay empty as unread posts arrive");
+  const fairOrder = ["Post one-3", "Post two-3", "Post one-2", "Post two-2"];
   for (let index = 0; index < fairOrder.length; index += 1) {
     await expectNextToast(index, fairOrder[index]);
     await completeToast(index);
   }
   await new Promise(resolve => setTimeout(resolve, 0));
-  assert.equal(sentTabMessages.length, fairOrder.length, "only three newest items per feed should be queued");
+  assert.equal(sentTabMessages.length, fairOrder.length, "only two newest items per feed should be queued");
 
   const disabledState = await request("feeds:setToast", { feedId: two.feed.id, enabled: false });
   assert.equal(disabledState.feeds.find(feed => feed.id === two.feed.id).toastEnabled, false);
@@ -325,6 +349,41 @@ async function expectNextToast(index, title) {
   heldFeedFetch = null;
   await waitFor(() => Number.isFinite(alarms.get(POLL_ALARM)?.scheduledTime), "consumed overlapping alarm was not recreated");
   assert.ok(alarms.get(POLL_ALARM).scheduledTime >= now + 1000, "recreated alarm should target the next due group");
+
+  const feedsBeforeFreshInstall = stored[STATE_KEY].feeds.length;
+  const settingsBeforeFreshInstall = {
+    localToastEnabled: stored.localToastEnabled,
+    localToastPosition: stored.localToastPosition,
+    localToastDuration: stored.localToastDuration,
+    pollIntervalMinutes: stored.pollIntervalMinutes,
+    maxPostsPerFeed: stored.maxPostsPerFeed
+  };
+  installedListener({ reason: "install" });
+  await waitFor(
+    () => stored[STATE_KEY].feeds.length === feedsBeforeFreshInstall + 11,
+    "a fresh install should follow the eleven selected default sources"
+  );
+  await waitFor(
+    () => Array.isArray(stored.newsFeedPulsePendingDefaultFeeds) && stored.newsFeedPulsePendingDefaultFeeds.length === 0,
+    "successful fresh-install defaults should be removed from the retry list"
+  );
+  assert.deepEqual({
+    localToastEnabled: stored.localToastEnabled,
+    localToastPosition: stored.localToastPosition,
+    localToastDuration: stored.localToastDuration,
+    pollIntervalMinutes: stored.pollIntervalMinutes,
+    maxPostsPerFeed: stored.maxPostsPerFeed
+  }, settingsBeforeFreshInstall, "following fresh-install defaults must not alter reader settings");
+  const defaultFeedUrls = new Set(global.NewsFeedPulseSourceCategories
+    .flatMap(category => category.sources)
+    .filter(source => source.defaultFollowed)
+    .map(source => source.url));
+  const defaultFeedIds = new Set(stored[STATE_KEY].feeds
+    .filter(feed => defaultFeedUrls.has(feed.requestedUrl))
+    .map(feed => feed.id));
+  assert.ok(stored[STATE_KEY].posts
+    .filter(post => defaultFeedIds.has(post.feedId))
+    .every(post => post.read), "items present when a default feed is first followed should start as read");
 
   Date.now = originalDateNow;
   console.log("background integration tests passed");

@@ -28,7 +28,10 @@ const feedListStatus = document.getElementById("feed-list-status");
 const importFeedsButton = document.getElementById("import-feeds");
 const importFeedsFile = document.getElementById("import-feeds-file");
 const exportFeedsButton = document.getElementById("export-feeds");
+const suggestedSources = document.getElementById("suggested-sources");
+const suggestedSourcesStatus = document.getElementById("suggested-sources-status");
 const MAX_IMPORT_BYTES = 1024 * 1024;
+const SOURCE_CATEGORIES = globalThis.NewsFeedPulseSourceCategories || [];
 let state = { feeds: [], posts: [], unreadCount: 0 };
 let currentCandidates = [];
 
@@ -53,6 +56,7 @@ async function loadSettings() {
   maxPostsInput.value = String(settings.maxPostsPerFeed);
   state = await request("state:get");
   renderSavedFeeds();
+  renderSuggestedSources();
 }
 
 async function saveSettings() {
@@ -124,6 +128,7 @@ function renderSavedFeeds() {
       try {
         state = await request("feeds:remove", { feedId: feed.id });
         renderSavedFeeds();
+        renderSuggestedSources();
         renderResults(currentCandidates);
         status(feedListStatus, `${feed.title} was removed.`);
       } catch (error) { status(feedListStatus, error.message, true); }
@@ -131,6 +136,67 @@ function renderSavedFeeds() {
     actions.append(toastLabel, remove);
     row.append(details, actions);
     savedFeeds.append(row);
+  }
+}
+
+function renderSuggestedSources() {
+  suggestedSources.replaceChildren();
+  const followed = new Set(state.feeds.flatMap(feed => [feed.url, feed.requestedUrl].filter(Boolean)));
+  const catalogUrls = new Set(SOURCE_CATEGORIES.flatMap(category => category.sources.map(source => source.url)));
+  const otherFollowed = state.feeds.filter(feed => !catalogUrls.has(feed.url) && !catalogUrls.has(feed.requestedUrl));
+  const categories = otherFollowed.length ? [
+    {
+      title: "Your other followed sources",
+      sources: otherFollowed.map(feed => ({
+        title: feed.title,
+        description: "Already in your subscriptions",
+        url: feed.requestedUrl || feed.url
+      }))
+    },
+    ...SOURCE_CATEGORIES
+  ] : SOURCE_CATEGORIES;
+  for (const category of categories) {
+    const group = document.createElement("div");
+    group.className = "source-group";
+    const heading = document.createElement("h3");
+    heading.textContent = category.title;
+    const list = document.createElement("ul");
+    list.className = "source-list";
+    for (const source of category.sources) {
+      const item = document.createElement("li");
+      item.className = "source-item";
+      const details = document.createElement("div");
+      const title = document.createElement("strong");
+      title.textContent = source.title;
+      const description = document.createElement("small");
+      description.textContent = source.description;
+      details.append(title, description);
+      const follow = document.createElement("button");
+      follow.type = "button";
+      follow.className = "secondary";
+      follow.textContent = followed.has(source.url) ? "Following" : "Follow";
+      follow.disabled = followed.has(source.url);
+      follow.addEventListener("click", async () => {
+        follow.disabled = true;
+        follow.textContent = "Adding…";
+        status(suggestedSourcesStatus, `Checking ${source.title}…`);
+        try {
+          const result = await request("feeds:add", { url: source.url });
+          state = result.state;
+          renderSavedFeeds();
+          renderSuggestedSources();
+          renderResults(currentCandidates);
+          status(suggestedSourcesStatus, `${result.feed.title} ${result.added ? "is now followed" : "was already followed"}.`);
+        } catch (error) {
+          renderSuggestedSources();
+          status(suggestedSourcesStatus, error.message || String(error), true);
+        }
+      });
+      item.append(details, follow);
+      list.append(item);
+    }
+    group.append(heading, list);
+    suggestedSources.append(group);
   }
 }
 
@@ -185,6 +251,7 @@ async function importFeeds(file) {
     const result = await request("feeds:import", { document: parsed });
     state = result.state;
     renderSavedFeeds();
+    renderSuggestedSources();
     renderResults(currentCandidates);
     status(feedListStatus, importSummary(result), Number(result.failed) > 0);
   } catch (error) {
@@ -221,6 +288,7 @@ function renderResults(candidates) {
         state = result.state;
         status(feedStatus, `${result.feed.title} ${result.added ? "was added" : "is already subscribed"}.`);
         renderSavedFeeds();
+        renderSuggestedSources();
         renderResults(candidates);
       } catch (error) {
         add.disabled = false;
