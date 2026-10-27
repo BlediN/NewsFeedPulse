@@ -23,6 +23,7 @@ let alarmListener;
 let installedListener;
 let sendMessageFailuresRemaining = 0;
 let redirectTarget = "https://redirect.test/old.xml";
+let browserWindowState = "normal";
 const changeListeners = [];
 const sentTabMessages = [];
 const injectedScripts = [];
@@ -69,6 +70,10 @@ global.chrome = {
     onChanged: { addListener: listener => changeListeners.push(listener) }
   },
   action: { setBadgeText: async details => { badgeTexts.push(details.text); } },
+  windows: {
+    get: async windowId => ({ id: windowId, state: browserWindowState }),
+    getAll: async () => [{ id: 10, state: browserWindowState }]
+  },
   runtime: {
     onMessage: eventSlot(listener => { messageListener = listener; }),
     onInstalled: eventSlot(listener => { installedListener = listener; }),
@@ -89,7 +94,7 @@ global.chrome = {
     onAlarm: eventSlot(listener => { alarmListener = listener; })
   },
   tabs: {
-    query: async () => [{ id: 1, url: "https://example.test/page", title: "Example", active: true }],
+    query: async () => [{ id: 1, windowId: 10, url: "https://example.test/page", title: "Example", active: true }],
     sendMessage: async (tabId, message) => {
       if (sendMessageFailuresRemaining > 0) {
         sendMessageFailuresRemaining -= 1;
@@ -282,6 +287,32 @@ async function expectNextToast(index, title) {
   await completeToast(0);
   await new Promise(resolve => setTimeout(resolve, 0));
   assert.equal(sentTabMessages.length, 1, "a feed with toasts disabled must not enqueue notifications");
+
+  browserWindowState = "minimized";
+  feedItems.set("one.xml", ["one-5", "one-4", "one-3", "one-2", "one-1", "one-0"]);
+  sentTabMessages.length = 0;
+  await request("feeds:refresh");
+  assert.equal(sentTabMessages.length, 0, "new toasts must not be delivered while Chrome is minimized");
+  assert.equal(stored.newsFeedPulseToastQueueV1.queue.length, 0,
+    "new toasts must not remain queued while Chrome is minimized");
+
+  browserWindowState = "normal";
+  feedItems.set("one.xml", ["one-7", "one-6", "one-5", "one-4", "one-3", "one-2", "one-1", "one-0"]);
+  await request("feeds:refresh");
+  await expectNextToast(0, "Post one-7");
+  assert.equal(sentTabMessages.some(entry => entry.message.data.title === "Post one-5"), false,
+    "restoring Chrome must not replay a toast created while it was minimized");
+  browserWindowState = "minimized";
+  await request("localToast:defer", {
+    deliveryId: sentTabMessages[0].message.data.deliveryId
+  }, { tab: { id: 1, windowId: 10 } });
+  assert.equal(sentTabMessages.filter(entry => entry.message.type === "localToast:deliver").length, 1,
+    "minimizing during a toast must not re-deliver it");
+  assert.equal(sentTabMessages.at(-1).message.type, "localToast:cancel",
+    "minimizing must cancel the active toast");
+  assert.equal(stored.newsFeedPulseToastQueueV1.queue.length, 0,
+    "minimizing during a toast must discard the active toast and the rest of its queued batch");
+  browserWindowState = "normal";
 
   const exported = await request("feeds:export");
   assert.equal(exported.format, "news-feed-pulse-feed-list");
