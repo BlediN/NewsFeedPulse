@@ -758,6 +758,7 @@ async function initializeBrowserSession() {
 async function enqueueRefreshNotifications(results) {
   const settings = await getSettings();
   if (!settings.localToastEnabled) return 0;
+  if (!await hasNonMinimizedBrowserWindow()) return 0;
   const groups = results.filter(result => result?.feed?.toastEnabled !== false && result.newPosts?.length)
     .map(result => ({
       feed: result.feed,
@@ -845,10 +846,31 @@ async function enqueueToastItems(items) {
   });
 }
 
+async function hasNonMinimizedBrowserWindow() {
+  try {
+    const windows = await chrome.windows.getAll({ windowTypes: ["normal"] });
+    return windows.some(browserWindow => browserWindow.state !== "minimized");
+  } catch (_error) {
+    return false;
+  }
+}
+
+async function isWindowMinimized(windowId) {
+  if (!Number.isInteger(windowId)) return !await hasNonMinimizedBrowserWindow();
+  try {
+    const browserWindow = await chrome.windows.get(windowId);
+    return browserWindow?.state === "minimized";
+  } catch (_error) {
+    return true;
+  }
+}
+
 async function findActiveToastTab() {
   const tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-  return tabs.find(tab => tab.id && !tab.discarded && tab.status !== "loading"
-    && !loadingToastTabs.has(tab.id) && /^https?:/i.test(tab.url || "")) || null;
+  const tab = tabs.find(candidate => candidate.id && !candidate.discarded && candidate.status !== "loading"
+    && !loadingToastTabs.has(candidate.id) && /^https?:/i.test(candidate.url || "")) || null;
+  if (!tab || await isWindowMinimized(tab.windowId)) return null;
+  return tab;
 }
 
 async function deliverToastToTab(tabId, data) {
@@ -887,20 +909,30 @@ async function dispatchNextToast() {
     const state = await getToastState();
     if (state.lease && Number(state.lease.expiresAt) > now) return;
     if (state.lease) state.lease = null;
-    const item = state.queue[0];
+    let item = state.queue[0];
+    while (item && Number.isFinite(Number(item.toastExpiresAt)) && Number(item.toastExpiresAt) <= now) {
+      state.queue.shift();
+      item = state.queue[0];
+    }
     if (!item) {
       await saveToastState(state);
       return;
     }
+    const storedToastExpiresAt = Number(item.toastExpiresAt);
+    const toastExpiresAt = Number.isFinite(storedToastExpiresAt)
+      ? storedToastExpiresAt
+      : now + settings.localToastDuration;
+    item.toastExpiresAt = toastExpiresAt;
+    const remainingDuration = Math.max(0, toastExpiresAt - now);
     const deliveryId = `toast-${now}-${globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2)}`;
-    const expiresAt = now + settings.localToastDuration + TOAST_LEASE_GRACE_MS;
+    const expiresAt = toastExpiresAt + TOAST_LEASE_GRACE_MS;
     state.lease = { deliveryId, itemId: item.id, tabId: tab.id, expiresAt };
     delivery = {
       ...item,
       deliveryId,
       expiresAt,
       position: settings.localToastPosition,
-      duration: settings.localToastDuration,
+      duration: remainingDuration,
       iconUrl: chrome.runtime.getURL("extension-icons/icon48x48.png")
     };
     await saveToastState(state);
@@ -1235,6 +1267,11 @@ async function handleMessage(message, sender) {
       return completed;
     }
     case "localToast:defer": {
+      const discard = await isWindowMinimized(sender.tab?.windowId);
+      if (discard) {
+        await clearToastQueue();
+        return true;
+      }
       const deferred = await finishToastDelivery(data.deliveryId, sender.tab?.id, false);
       if (!deferred) await requestToastDispatch().catch(() => false);
       return deferred;
