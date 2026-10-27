@@ -28,9 +28,16 @@
       </section>
 
       <section>
+        <h2>Suggested news sources</h2>
+        <p>Quickly follow feeds from the United States, Albania, and around the world. Sources you added yourself also appear here.</p>
+        <div id="suggested-sources" class="source-groups"></div>
+        <output id="suggested-sources-status" aria-live="polite"></output>
+      </section>
+
+      <section>
         <h2>In-page notifications</h2>
         <label class="check"><input id="toast-enabled" type="checkbox"> Show a toast when a new item arrives</label>
-        <p class="hint">Use the controls under Subscribed feeds to turn notifications on or off for individual feeds. Toasts appear one at a time; the newest item from each updated feed is shown before up to two additional items from those feeds.</p>
+        <p class="hint">Toasts appear one at a time. For each updated feed, up to its two newest posts are queued. When several feeds update together, the newest post from each feed appears first, followed by the second. Posts published while Chrome is closed are skipped when Chrome reopens.</p>
         <div class="fields">
           <label for="toast-position">Screen corner</label>
           <select id="toast-position">
@@ -81,6 +88,7 @@
       </section>
 
     </main>
+    <script src="news-sources.js"></script>
     <script src="local-settings.js"></script>
   </body>
 </html>

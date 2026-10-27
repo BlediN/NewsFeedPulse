@@ -29,6 +29,14 @@ output.error { color: #a52b2b; }
 .feed-result, .saved-feed { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid #e6e8ef; }
 .feed-result strong, .feed-result span, .saved-feed strong, .saved-feed span, .saved-feed small { display: block; }
 .feed-result span, .saved-feed span { overflow: hidden; color: #656b7c; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.source-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 14px; }
+.source-group { min-width: 0; }
+.source-group h3 { margin: 0 0 4px; font-size: 15px; }
+.source-list { margin: 0; padding: 0; list-style: none; }
+.source-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid #e6e8ef; }
+.source-item strong, .source-item small { display: block; }
+.source-item small { margin-top: 2px; color: #656b7c; }
+.source-item button { min-height: 34px; padding: 6px 12px; }
 .feed-toast-control { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; font-weight: 600; white-space: nowrap; }
 .feed-toast-control input { accent-color: #5949c6; }
 .error-text { margin-top: 3px; color: #a52b2b; }
@@ -36,6 +44,7 @@ button.danger { color: #a52b2b; }
 @media (max-width: 560px) {
   .row { flex-direction: column; }
   .fields { grid-template-columns: 1fr; }
+  .source-groups { grid-template-columns: 1fr; }
   .section-heading { align-items: flex-start; flex-direction: column; }
   .saved-feed { grid-template-columns: 1fr; }
 }
@@ -43,5 +52,5 @@ button.danger { color: #a52b2b; }
   body { background: #15161c; color: #f2f3f7; } section { background: #202229; border-color: #343741; }
   header p, p { color: #b1b5c1; } input[type="text"], select { background: #17181e; color: #f2f3f7; border-color: #494d59; }
   button.secondary { background: #373248; color: #ded9ff; } .actions a { color: #b9afff; }
-  .feed-result, .saved-feed { border-color: #343741; } .feed-result span, .saved-feed span { color: #b1b5c1; }
+  .feed-result, .saved-feed, .source-item { border-color: #343741; } .feed-result span, .saved-feed span, .source-item small { color: #b1b5c1; }
 }
