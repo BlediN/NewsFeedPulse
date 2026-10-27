@@ -133,7 +133,10 @@
     slot.replaceChildren(toast);
 
     const numericDuration = Number(data.duration);
-    const duration = Math.max(2000, Math.min(Number.isFinite(numericDuration) ? numericDuration : 3000, 300000));
+    const numericExpiresAt = Number(data.toastExpiresAt);
+    const duration = Number.isFinite(numericExpiresAt)
+      ? Math.max(0, Math.min(numericExpiresAt - Date.now(), 300000))
+      : Math.max(2000, Math.min(Number.isFinite(numericDuration) ? numericDuration : 3000, 300000));
     current = {
       data,
       deliveryId: data.deliveryId,

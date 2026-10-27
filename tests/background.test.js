@@ -216,7 +216,22 @@ async function expectNextToast(index, title) {
   assert.equal(sentTabMessages[0].message.type, "localToast:deliver");
   assert.equal(sentTabMessages[0].message.data.position, "bottom-left");
   assert.equal(sentTabMessages[0].message.data.duration, 3000);
-  await completeToast(0);
+  const firstToastDeadline = sentTabMessages[0].message.data.toastExpiresAt;
+  now += 1000;
+  await request("localToast:defer", {
+    deliveryId: sentTabMessages[0].message.data.deliveryId
+  }, { tab: { id: 1 } });
+  await waitFor(() => sentTabMessages.length === 2, "deferred toast was not moved to the active tab");
+  assert.equal(sentTabMessages[1].message.data.toastExpiresAt, firstToastDeadline,
+    "moving a toast between tabs must keep its original deadline");
+  assert.equal(sentTabMessages[1].message.data.duration, 2000,
+    "moving a toast between tabs must only show it for the remaining time");
+  now += 2000;
+  await request("localToast:defer", {
+    deliveryId: sentTabMessages[1].message.data.deliveryId
+  }, { tab: { id: 1 } });
+  assert.equal(sentTabMessages.length, 2, "an expired toast must not be shown again after another tab switch");
+  assert.equal(stored.newsFeedPulseToastQueueV1.queue.length, 0, "an expired toast must leave the queue");
   sentTabMessages.length = 0;
   injectedScripts.length = 0;
 

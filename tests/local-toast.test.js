@@ -100,6 +100,21 @@ assert.deepEqual(runtimeMessages.at(-1), {
   data: { deliveryId: "delivery-1" }
 });
 
+response = undefined;
+firstListener({
+  type: "localToast:deliver",
+  data: {
+    deliveryId: "delivery-with-deadline",
+    duration: 500,
+    toastExpiresAt: Date.now() + 500
+  }
+}, {}, value => { response = value; });
+assert.deepEqual(response, { accepted: true });
+const deadlineTimer = [...timers.values()][0];
+assert.ok(deadlineTimer.delay > 0 && deadlineTimer.delay <= 500,
+  "a re-delivered toast must honor a remaining duration shorter than two seconds");
+deadlineTimer.callback();
+
 document.visibilityState = "hidden";
 response = undefined;
 firstListener({ type: "localToast:deliver", data: { deliveryId: "hidden-delivery", duration: 3000 } }, {}, value => { response = value; });

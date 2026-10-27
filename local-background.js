@@ -887,20 +887,30 @@ async function dispatchNextToast() {
     const state = await getToastState();
     if (state.lease && Number(state.lease.expiresAt) > now) return;
     if (state.lease) state.lease = null;
-    const item = state.queue[0];
+    let item = state.queue[0];
+    while (item && Number.isFinite(Number(item.toastExpiresAt)) && Number(item.toastExpiresAt) <= now) {
+      state.queue.shift();
+      item = state.queue[0];
+    }
     if (!item) {
       await saveToastState(state);
       return;
     }
+    const storedToastExpiresAt = Number(item.toastExpiresAt);
+    const toastExpiresAt = Number.isFinite(storedToastExpiresAt)
+      ? storedToastExpiresAt
+      : now + settings.localToastDuration;
+    item.toastExpiresAt = toastExpiresAt;
+    const remainingDuration = Math.max(0, toastExpiresAt - now);
     const deliveryId = `toast-${now}-${globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2)}`;
-    const expiresAt = now + settings.localToastDuration + TOAST_LEASE_GRACE_MS;
+    const expiresAt = toastExpiresAt + TOAST_LEASE_GRACE_MS;
     state.lease = { deliveryId, itemId: item.id, tabId: tab.id, expiresAt };
     delivery = {
       ...item,
       deliveryId,
       expiresAt,
       position: settings.localToastPosition,
-      duration: settings.localToastDuration,
+      duration: remainingDuration,
       iconUrl: chrome.runtime.getURL("extension-icons/icon48x48.png")
     };
     await saveToastState(state);
