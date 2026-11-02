@@ -6,13 +6,24 @@
    "background": {
       "service_worker": "local-background.js"
    },
-   "content_scripts": [ {
-      "js": [ "content-feed-detector.js", "local-toast.js" ],
-      "matches": [ "http://*/*", "https://*/*" ],
-      "run_at": "document_end"
-   } ],
+   "content_scripts": [
+      {
+         "js": [
+            "content-feed-detector.js",
+            "local-toast.js"
+         ],
+         "matches": [
+            "http://*/*",
+            "https://*/*"
+         ],
+         "run_at": "document_end"
+      }
+   ],
    "description": "A private, local RSS and Atom reader with in-page news alerts",
-   "host_permissions": [ "http://*/*", "https://*/*" ],
+   "host_permissions": [
+      "http://*/*",
+      "https://*/*"
+   ],
    "icons": {
       "128": "extension-icons/icon128x128.png",
       "19": "extension-icons/icon-retina.png",
@@ -21,11 +32,23 @@
    "manifest_version": 3,
    "name": "News Feed Pulse",
    "options_page": "local-settings.html",
-   "permissions": [ "storage", "unlimitedStorage", "alarms", "scripting" ],
+   "permissions": [
+      "storage",
+      "unlimitedStorage",
+      "alarms",
+      "scripting"
+   ],
    "short_name": "Feed Pulse",
-   "version": "9.3.0",
-   "web_accessible_resources": [ {
-      "matches": [ "https://*/*", "http://*/*" ],
-      "resources": [ "extension-icons/icon48x48.png" ]
-   } ]
+   "version": "9.4.6",
+   "web_accessible_resources": [
+      {
+         "matches": [
+            "https://*/*",
+            "http://*/*"
+         ],
+         "resources": [
+            "extension-icons/icon48x48.png"
+         ]
+      }
+   ]
 }

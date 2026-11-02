@@ -12,6 +12,7 @@ const ui = {
   settings: document.getElementById("settings-button"),
   refresh: document.getElementById("refresh-button"),
   add: document.getElementById("add-button"),
+  toastToggle: document.getElementById("toast-toggle-button"),
   headerStatus: document.getElementById("header-status"),
   readerView: document.getElementById("reader-view"),
   addView: document.getElementById("add-view"),
@@ -31,25 +32,104 @@ const ui = {
   addAll: document.getElementById("add-all-button"),
   candidateList: document.getElementById("candidate-list"),
   postTemplate: document.getElementById("post-template"),
-  candidateTemplate: document.getElementById("candidate-template")
+  candidateTemplate: document.getElementById("candidate-template"),
 };
 
 let readerState = { feeds: [], posts: [], unreadCount: 0 };
 let activePage = { url: "", title: "", candidates: [] };
 let candidates = [];
 let activeFilter = "all";
+let toastNotificationsEnabled = true;
+let stateRequestSequence = 0;
+let readerStateLoaded = false;
 
-function request(type, data = {}) {
-  return chrome.runtime.sendMessage({ type, data }).then(response => {
-    if (!response?.ok) throw new Error(response?.error?.message || "The local RSS service did not respond.");
-    return response.data;
-  });
+function applyReaderState(state) {
+  if (!state || !Array.isArray(state.feeds) || !Array.isArray(state.posts))
+    throw new Error("The saved feed data was incomplete. Please refresh the popup.");
+  stateRequestSequence += 1;
+  readerState = state;
+  readerStateLoaded = true;
+  renderState();
+}
+
+async function reloadReaderState() {
+  const sequence = ++stateRequestSequence;
+  const state = await request("state:get");
+  if (sequence !== stateRequestSequence) return;
+  if (!state || !Array.isArray(state.feeds) || !Array.isArray(state.posts))
+    throw new Error("The saved feed data was incomplete. Please refresh the popup.");
+  readerState = state;
+  readerStateLoaded = true;
+  renderState();
+}
+
+async function request(type, data = {}) {
+  let lastError = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const response = await chrome.runtime.sendMessage({ type, data });
+      if (!response?.ok) {
+        const error = new Error(
+          response?.error?.message || "The local RSS service did not respond.",
+        );
+        error.fromBackground = true;
+        throw error;
+      }
+      return response.data;
+    } catch (error) {
+      lastError = error;
+      if (error?.fromBackground || attempt === 2) throw error;
+      // A newly waking MV3 service worker can briefly reject the first message.
+      // Retry transport failures rather than rendering an empty reader immediately.
+      await new Promise((resolve) => setTimeout(resolve, 150 * (attempt + 1)));
+    }
+  }
+  throw lastError || new Error("The local RSS service did not respond.");
 }
 
 function setMessage(element, text, kind = "") {
   element.textContent = text || "";
   element.className = `message${kind ? ` ${kind}` : ""}`;
   element.hidden = !text;
+}
+
+function renderToastToggle(enabled) {
+  toastNotificationsEnabled = enabled !== false;
+  ui.toastToggle.textContent = toastNotificationsEnabled ? "🔔" : "🔕";
+  ui.toastToggle.classList.toggle("is-on", toastNotificationsEnabled);
+  ui.toastToggle.classList.toggle("is-off", !toastNotificationsEnabled);
+  ui.toastToggle.setAttribute(
+    "aria-pressed",
+    String(toastNotificationsEnabled),
+  );
+  ui.toastToggle.setAttribute(
+    "aria-label",
+    toastNotificationsEnabled
+      ? "Turn toast notifications off"
+      : "Turn toast notifications on",
+  );
+  ui.toastToggle.title = `Toast notifications: ${toastNotificationsEnabled ? "ON" : "OFF"}`;
+}
+
+async function toggleToastNotifications() {
+  const nextEnabled = !toastNotificationsEnabled;
+  ui.toastToggle.disabled = true;
+  try {
+    await chrome.storage.local.set({ localToastEnabled: nextEnabled });
+    renderToastToggle(nextEnabled);
+    // The background handler clears any waiting toast immediately when switched off,
+    // and resumes normal delivery (respecting the optional weekly schedule) when on.
+    await request("settings:changed", { globalToastChanged: true });
+  } catch (error) {
+    const stored = await chrome.storage.local
+      .get({ localToastEnabled: true })
+      .catch(() => ({ localToastEnabled: toastNotificationsEnabled }));
+    renderToastToggle(stored.localToastEnabled);
+    ui.headerStatus.textContent =
+      error.message || "Could not update toast notifications.";
+  } finally {
+    ui.toastToggle.disabled = false;
+  }
 }
 
 function relativeTime(timestamp) {
@@ -59,17 +139,22 @@ function relativeTime(timestamp) {
   const absolute = Math.abs(seconds);
   if (absolute < 60) return "now";
   const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
-  if (absolute < 3600) return formatter.format(Math.round(seconds / 60), "minute");
-  if (absolute < 86400) return formatter.format(Math.round(seconds / 3600), "hour");
-  if (absolute < 2592000) return formatter.format(Math.round(seconds / 86400), "day");
+  if (absolute < 3600)
+    return formatter.format(Math.round(seconds / 60), "minute");
+  if (absolute < 86400)
+    return formatter.format(Math.round(seconds / 3600), "hour");
+  if (absolute < 2592000)
+    return formatter.format(Math.round(seconds / 86400), "day");
   return new Date(value).toLocaleDateString();
 }
 
 function renderState() {
   const selectedFeed = ui.feedFilter.value;
   ui.feedFilter.replaceChildren(new Option("All feeds", ""));
-  for (const feed of readerState.feeds) ui.feedFilter.append(new Option(feed.title, feed.id));
-  if (readerState.feeds.some(feed => feed.id === selectedFeed)) ui.feedFilter.value = selectedFeed;
+  for (const feed of readerState.feeds)
+    ui.feedFilter.append(new Option(feed.title, feed.id));
+  if (readerState.feeds.some((feed) => feed.id === selectedFeed))
+    ui.feedFilter.value = selectedFeed;
   ui.removeFeed.hidden = !ui.feedFilter.value;
   ui.headerStatus.textContent = readerState.unreadCount
     ? `${readerState.unreadCount} unread · ${readerState.feeds.length} feed${readerState.feeds.length === 1 ? "" : "s"}`
@@ -80,14 +165,26 @@ function renderState() {
 function renderPosts() {
   const query = ui.search.value.trim().toLowerCase();
   const feedId = ui.feedFilter.value;
-  let posts = readerState.posts.filter(post => !feedId || post.feedId === feedId);
-  if (activeFilter === "unread") posts = posts.filter(post => !post.read);
-  if (activeFilter === "starred") posts = posts.filter(post => post.starred);
-  if (query) posts = posts.filter(post => `${post.title} ${post.summary} ${post.feedTitle}`.toLowerCase().includes(query));
+  let posts = readerState.posts.filter(
+    (post) => !feedId || post.feedId === feedId,
+  );
+  if (activeFilter === "unread") posts = posts.filter((post) => !post.read);
+  if (activeFilter === "starred") posts = posts.filter((post) => post.starred);
+  if (query)
+    posts = posts.filter((post) =>
+      `${post.title} ${post.summary} ${post.feedTitle}`
+        .toLowerCase()
+        .includes(query),
+    );
   ui.postList.replaceChildren();
 
-  const selected = readerState.feeds.find(feed => feed.id === feedId);
-  if (selected?.error) setMessage(ui.readerMessage, `${selected.title}: ${selected.error}`, "error");
+  const selected = readerState.feeds.find((feed) => feed.id === feedId);
+  if (selected?.error)
+    setMessage(
+      ui.readerMessage,
+      `${selected.title}: ${selected.error}`,
+      "error",
+    );
   else setMessage(ui.readerMessage, "");
 
   if (!posts.length) {
@@ -97,7 +194,8 @@ function renderPosts() {
     const description = document.createElement("span");
     if (!readerState.feeds.length) {
       title.textContent = "No feeds yet";
-      description.textContent = "Use the + button to find a feed on the current page or paste a feed URL.";
+      description.textContent =
+        "Use the + button to find a feed on the current page or paste a feed URL.";
     } else {
       title.textContent = "No matching posts";
       description.textContent = "Try another feed, filter, or search.";
@@ -112,9 +210,25 @@ function renderPosts() {
     const card = ui.postTemplate.content.firstElementChild.cloneNode(true);
     card.classList.toggle("unread", !post.read);
     card.dataset.postId = post.id;
-    card.querySelector(".post-title").textContent = post.title || "Untitled item";
-    const time = relativeTime(post.sortAt);
-    card.querySelector(".post-meta").textContent = `${post.feedTitle}${time ? ` · ${time}` : ""}`;
+    card.querySelector(".post-title").textContent =
+      post.title || "Untitled item";
+    const discoveredAt = Number(post.firstSeenAt) || Number(post.sortAt);
+    const discoveredTime = relativeTime(discoveredAt);
+    const publishedAt = Number(post.sortAt);
+    const hasOlderPublishedDate =
+      Number.isFinite(discoveredAt) &&
+      Number.isFinite(publishedAt) &&
+      discoveredAt - publishedAt > 60 * 1000;
+    const publishedTime = hasOlderPublishedDate
+      ? relativeTime(publishedAt)
+      : "";
+    card.querySelector(".post-meta").textContent = [
+      post.feedTitle,
+      discoveredTime ? `Found ${discoveredTime}` : "",
+      publishedTime ? `Published ${publishedTime}` : "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
     card.querySelector(".post-summary").textContent = post.summary || "";
     const open = card.querySelector(".post-open");
     open.disabled = !post.link;
@@ -132,20 +246,23 @@ function renderPosts() {
 async function openPost(postId) {
   try {
     await request("posts:open", { postId });
-    const post = readerState.posts.find(value => value.id === postId);
+    const post = readerState.posts.find((value) => value.id === postId);
     if (post && !post.read) {
       post.read = true;
       readerState.unreadCount = Math.max(0, readerState.unreadCount - 1);
       renderState();
     }
-  } catch (error) { setMessage(ui.readerMessage, error.message, "error"); }
+  } catch (error) {
+    setMessage(ui.readerMessage, error.message, "error");
+  }
 }
 
 async function toggleStar(postId, starred) {
   try {
-    readerState = await request("posts:update", { postId, patch: { starred } });
-    renderState();
-  } catch (error) { setMessage(ui.readerMessage, error.message, "error"); }
+    applyReaderState(await request("posts:update", { postId, patch: { starred } }));
+  } catch (error) {
+    setMessage(ui.readerMessage, error.message, "error");
+  }
 }
 
 function closeAddView(restoreFocus = true) {
@@ -184,15 +301,25 @@ async function discover(value, pageCandidates = []) {
   if (!url) return;
   ui.discoverButton.disabled = true;
   ui.discoverButton.textContent = "Finding…";
-  setMessage(ui.discoveryStatus, "Checking the page and validating feed links…");
+  setMessage(
+    ui.discoveryStatus,
+    "Checking the page and validating feed links…",
+  );
   candidates = [];
   renderCandidates();
   try {
-    const result = await request("feeds:discover", { url, candidates: pageCandidates });
+    const result = await request("feeds:discover", {
+      url,
+      candidates: pageCandidates,
+    });
     candidates = result.candidates || [];
-    setMessage(ui.discoveryStatus, candidates.length === 1
-      ? "One working feed found."
-      : `${candidates.length} working feeds found on this page.`, "success");
+    setMessage(
+      ui.discoveryStatus,
+      candidates.length === 1
+        ? "One working feed found."
+        : `${candidates.length} working feeds found on this page.`,
+      "success",
+    );
     renderCandidates();
   } catch (error) {
     setMessage(ui.discoveryStatus, error.message, "error");
@@ -205,14 +332,22 @@ async function discover(value, pageCandidates = []) {
 function renderCandidates() {
   ui.candidateList.replaceChildren();
   ui.discoveryActions.hidden = !candidates.length;
-  ui.resultCount.textContent = candidates.length ? `${candidates.length} feed${candidates.length === 1 ? "" : "s"}` : "";
+  ui.resultCount.textContent = candidates.length
+    ? `${candidates.length} feed${candidates.length === 1 ? "" : "s"}`
+    : "";
   ui.addAll.hidden = candidates.length < 2;
-  const storedUrls = new Set(readerState.feeds.flatMap(feed => [feed.url, feed.requestedUrl].filter(Boolean)));
+  const storedUrls = new Set(
+    readerState.feeds.flatMap((feed) =>
+      [feed.url, feed.requestedUrl].filter(Boolean),
+    ),
+  );
   for (const candidate of candidates) {
     const card = ui.candidateTemplate.content.firstElementChild.cloneNode(true);
-    card.querySelector(".candidate-title").textContent = candidate.title || "RSS feed";
+    card.querySelector(".candidate-title").textContent =
+      candidate.title || "RSS feed";
     card.querySelector(".candidate-url").textContent = candidate.url;
-    card.querySelector(".candidate-meta").textContent = `${String(candidate.format || "feed").toUpperCase()} · ${candidate.itemCount ?? 0} recent items`;
+    card.querySelector(".candidate-meta").textContent =
+      `${String(candidate.format || "feed").toUpperCase()} · ${candidate.itemCount ?? 0} recent items`;
     const button = card.querySelector(".candidate-add");
     if (storedUrls.has(candidate.url)) {
       button.textContent = "Added";
@@ -230,12 +365,16 @@ async function addCandidate(candidate, button) {
   button.textContent = "Adding…";
   try {
     const result = await request("feeds:add", { url: candidate.url });
-    readerState = result.state;
+    applyReaderState(result.state);
     button.textContent = result.added ? "Added" : "Already added";
     button.classList.add("added");
-    setMessage(ui.discoveryStatus, result.added
-      ? `${result.feed.title} added with ${result.importedPosts} recent posts.`
-      : `${result.feed.title} is already in your feeds.`, "success");
+    setMessage(
+      ui.discoveryStatus,
+      result.added
+        ? `${result.feed.title} added with ${result.importedPosts} recent posts.`
+        : `${result.feed.title} is already in your feeds.`,
+      "success",
+    );
     renderState();
     renderCandidates();
   } catch (error) {
@@ -246,8 +385,14 @@ async function addCandidate(candidate, button) {
 }
 
 async function addAllCandidates() {
-  const existing = new Set(readerState.feeds.flatMap(feed => [feed.url, feed.requestedUrl].filter(Boolean)));
-  const pending = candidates.filter(candidate => !existing.has(candidate.url));
+  const existing = new Set(
+    readerState.feeds.flatMap((feed) =>
+      [feed.url, feed.requestedUrl].filter(Boolean),
+    ),
+  );
+  const pending = candidates.filter(
+    (candidate) => !existing.has(candidate.url),
+  );
   if (!pending.length) return;
   ui.addAll.disabled = true;
   let added = 0;
@@ -255,13 +400,17 @@ async function addAllCandidates() {
     setMessage(ui.discoveryStatus, `Adding ${added + 1} of ${pending.length}…`);
     try {
       const result = await request("feeds:add", { url: candidate.url });
-      readerState = result.state;
+      applyReaderState(result.state);
       if (result.added) added += 1;
     } catch (_error) {}
     renderCandidates();
   }
   ui.addAll.disabled = false;
-  setMessage(ui.discoveryStatus, `${added} feed${added === 1 ? "" : "s"} added.`, added ? "success" : "error");
+  setMessage(
+    ui.discoveryStatus,
+    `${added} feed${added === 1 ? "" : "s"} added.`,
+    added ? "success" : "error",
+  );
   renderState();
 }
 
@@ -270,10 +419,11 @@ async function refreshFeeds() {
   ui.refresh.textContent = "…";
   setMessage(ui.readerMessage, "Refreshing feeds…");
   try {
-    const response = await request("feeds:refresh", { feedId: ui.feedFilter.value || null });
-    readerState = response.state;
+    const response = await request("feeds:refresh", {
+      feedId: ui.feedFilter.value || null,
+    });
+    applyReaderState(response.state);
     setMessage(ui.readerMessage, "Feeds refreshed.", "success");
-    renderState();
   } catch (error) {
     setMessage(ui.readerMessage, error.message, "error");
   } finally {
@@ -283,49 +433,89 @@ async function refreshFeeds() {
 }
 
 ui.settings.addEventListener("click", () => chrome.runtime.openOptionsPage());
-ui.add.addEventListener("click", () => ui.addView.hidden ? showAddView() : closeAddView());
+ui.add.addEventListener("click", () =>
+  ui.addView.hidden ? showAddView() : closeAddView(),
+);
 ui.back.addEventListener("click", () => closeAddView());
 ui.refresh.addEventListener("click", refreshFeeds);
+ui.toastToggle.addEventListener("click", toggleToastNotifications);
 ui.search.addEventListener("input", renderPosts);
-ui.feedFilter.addEventListener("change", () => { ui.removeFeed.hidden = !ui.feedFilter.value; renderPosts(); });
-document.querySelectorAll(".filter").forEach(button => button.addEventListener("click", () => {
-  activeFilter = button.dataset.filter;
-  document.querySelectorAll(".filter").forEach(value => value.classList.toggle("active", value === button));
+ui.feedFilter.addEventListener("change", () => {
+  ui.removeFeed.hidden = !ui.feedFilter.value;
   renderPosts();
-}));
-ui.discoverForm.addEventListener("submit", event => { event.preventDefault(); discover(ui.feedUrl.value); });
+});
+document.querySelectorAll(".filter").forEach((button) =>
+  button.addEventListener("click", () => {
+    activeFilter = button.dataset.filter;
+    document
+      .querySelectorAll(".filter")
+      .forEach((value) => value.classList.toggle("active", value === button));
+    renderPosts();
+  }),
+);
+ui.discoverForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  discover(ui.feedUrl.value);
+});
 ui.addAll.addEventListener("click", addAllCandidates);
 ui.markAll.addEventListener("click", async () => {
-  try { readerState = await request("posts:markAllRead", { feedId: ui.feedFilter.value || null }); renderState(); }
-  catch (error) { setMessage(ui.readerMessage, error.message, "error"); }
+  try {
+    applyReaderState(await request("posts:markAllRead", {
+      feedId: ui.feedFilter.value || null,
+    }));
+  } catch (error) {
+    setMessage(ui.readerMessage, error.message, "error");
+  }
 });
 ui.removeFeed.addEventListener("click", async () => {
-  const feed = readerState.feeds.find(value => value.id === ui.feedFilter.value);
+  const feed = readerState.feeds.find(
+    (value) => value.id === ui.feedFilter.value,
+  );
   if (!feed || !confirm(`Remove “${feed.title}” and its saved posts?`)) return;
   try {
-    readerState = await request("feeds:remove", { feedId: feed.id });
+    applyReaderState(await request("feeds:remove", { feedId: feed.id }));
     ui.feedFilter.value = "";
-    renderState();
-  } catch (error) { setMessage(ui.readerMessage, error.message, "error"); }
+  } catch (error) {
+    setMessage(ui.readerMessage, error.message, "error");
+  }
 });
 
-document.addEventListener("keydown", event => {
+document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !ui.addView.hidden) closeAddView();
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "local" && changes.newsFeedPulseStateV1) request("state:get").then(value => { readerState = value; renderState(); }).catch(() => undefined);
+  if (area !== "local") return;
+  if (changes.localToastEnabled)
+    renderToastToggle(changes.localToastEnabled.newValue !== false);
+  if (changes.newsFeedPulseStateV1)
+    reloadReaderState().catch((error) => {
+      if (readerStateLoaded)
+        setMessage(ui.readerMessage, `Could not update feeds: ${error.message}`, "error");
+    });
 });
 
-Promise.all([request("state:get"), request("page:active")])
-  .then(([state, page]) => {
-    readerState = state;
-    activePage = page;
+// Load the feed reader independently from page discovery and the bell preference.
+// A slow page lookup or service-worker startup should not leave the feed list blank.
+setMessage(ui.readerMessage, "Loading feeds and posts…");
+reloadReaderState().catch((error) => {
+  setMessage(
+    ui.readerMessage,
+    `Could not load feeds: ${error.message}. Try reopening the popup.`,
+    "error",
+  );
+});
+request("page:active")
+  .then((page) => {
+    activePage = page || { url: "", title: "", candidates: [] };
     activePageLoaded = true;
-    renderState();
     if (!ui.addView.hidden) initializeAddView();
   })
-  .catch(error => {
-    setMessage(ui.readerMessage, `Could not start the local reader: ${error.message}`, "error");
-    renderState();
+  .catch(() => {
+    activePageLoaded = true;
+    activePage = { url: "", title: "", candidates: [] };
   });
+chrome.storage.local
+  .get({ localToastEnabled: true })
+  .then((settings) => renderToastToggle(settings.localToastEnabled))
+  .catch(() => renderToastToggle(true));
